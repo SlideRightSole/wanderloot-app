@@ -178,12 +178,16 @@
   const SOURCES = ["Direct","EatClub","Groupon","Referral","Walk-in"];
   const BILL_AT = 5, FEE = 97;
   // Partner plans (good/better/best). Starter = pay only in months with 5+; Growth/Featured = flat while Active.
+  // Each plan = a placement level + a monthly customer target. No guarantees:
+  // billing WATERFALLS down to whatever level we actually delivered, capped at the partner's plan.
   const PLANS = [
-    { k:"starter",  label:"Starter",  fee:97,  flat:false, color:"#8a97a0" },
-    { k:"growth",   label:"Growth",   fee:199, flat:true,  color:"#e0a01c" },
-    { k:"featured", label:"Featured", fee:399, flat:true,  color:"#0fb894" }
+    { k:"starter",  label:"Starter",  fee:97,  target:5,  color:"#8a97a0" },
+    { k:"growth",   label:"Growth",   fee:199, target:12, color:"#e0a01c" },
+    { k:"featured", label:"Featured", fee:399, target:25, color:"#0fb894" }
   ];
   const planOf = p => PLANS.find(x => x.k === (p.plan || "starter")) || PLANS[0];
+  function earnedFee(p){ let f = 0; for (const pl of PLANS) if ((p.redemptions || 0) >= pl.target) f = Math.max(f, pl.fee); return f; } // highest tier the volume cleared
+  function effectiveFee(p){ return Math.min(planOf(p).fee, earnedFee(p)); } // never more than their plan, never more than delivered
   // Suburb centroids so any lead can be placed on the customer map.
   const SUBURB_COORDS = {
     "Surfers Paradise":[-28.0027,153.4309],"Broadbeach":[-28.0300,153.4310],"Broadbeach Waters":[-28.0380,153.4200],
@@ -352,8 +356,8 @@
   let editId = null;
 
   function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2400); }
-  // Starter bills only in a month with 5+ redemptions; flat plans (Growth/Featured) bill while Active.
-  function billing(p){ const pl = planOf(p); return pl.flat ? p.status === "active" : p.redemptions >= BILL_AT; }
+  // A partner bills this month only if we delivered their first target (5+); the amount waterfalls to what we delivered.
+  function billing(p){ return effectiveFee(p) > 0; }
 
   // ---------- Overview ----------
   function renderOverview(){
@@ -362,7 +366,7 @@
     const billingCount = partners.filter(billing).length;
     const totalRedemptions = partners.reduce((a,p)=>a+p.redemptions,0);
     const pipelineCount = partners.filter(p=>["lead","contacted","interested","meeting"].includes(p.status)).length;
-    const mrr = partners.filter(billing).reduce((s,p)=>s+planOf(p).fee,0);
+    const mrr = partners.filter(billing).reduce((s,p)=>s+effectiveFee(p),0);
     const nearBill = partners.filter(p=>!billing(p) && p.redemptions>0 && p.redemptions>=BILL_AT-1);
 
     const kpi = (k,v,s,cls="")=>`<div class="kpi ${cls}"><div class="k">${k}</div><div class="v num">${v}</div><div class="s">${s}</div></div>`;
@@ -370,7 +374,7 @@
     let html = `<div class="livebar">🗺️ <b class="num">${liveNow}</b> partners are live on the customer map right now — set any partner to <b>Active</b> and they appear in the app instantly.</div><div class="kpis">
       ${kpi("Signed partners", signed.length, active.length+" live &amp; delivering")}
       ${kpi("Billing now", billingCount, "partners on a paid plan","gold")}
-      ${kpi("Monthly revenue", "$"+mrr.toLocaleString(), billingCount+" partners across 3 plans","hero")}
+      ${kpi("Monthly revenue", "$"+mrr.toLocaleString(), billingCount+" partners · billed on delivery","hero")}
       ${kpi("Redemptions", totalRedemptions, "customers delivered")}
       ${kpi("In pipeline", pipelineCount, "leads &rarr; meetings")}
       ${kpi("Total on file", partners.length, "across "+new Set(partners.map(p=>p.suburb)).size+" suburbs")}
@@ -433,7 +437,7 @@
         <td><span class="pill" style="background:${secCfg(p.sector).color}18; color:${secCfg(p.sector).color}">${secCfg(p.sector).label}</span></td>
         <td style="max-width:240px">${p.offer && p.offer!=="—" ? p.offer : '<span class="vsub">No WanderLoot offer set yet</span>'}<div class="vsub">~$${p.value} · ${p.source}${isWarm(p)?` · `+dealLink(p,"their current deal"):""}</div></td>
         <td><select class="statusSel" onchange="setStatus(${p.id}, this.value)">${STATUS.map(s=>`<option value="${s.k}" ${p.status===s.k?"selected":""}>${s.label}</option>`).join("")}</select></td>
-        <td>${ b ? `<span class="billy">$${planOf(p).fee}/mo</span>` : (planOf(p).flat ? `<span class="vsub">Bills when Active</span>` : `<div class="prog"><span class="num">${p.redemptions}/${BILL_AT}</span><span class="pt"><i style="width:${p.redemptions/BILL_AT*100}%"></i></span></div>`) }</td>
+        <td>${ b ? `<span class="billy">$${effectiveFee(p)}</span><div class="vsub">${p.redemptions} this mo${effectiveFee(p) < planOf(p).fee ? ` · below ${planOf(p).label}` : ""}</div>` : `<div class="prog"><span class="num">${p.redemptions}/${planOf(p).target}</span><span class="pt"><i style="width:${Math.min(100,p.redemptions/planOf(p).target*100)}%"></i></span></div>` }</td>
         <td class="vsub">${p.phone}</td>
         <td><button class="btn ghost sm" onclick="addRedemption(${p.id})">+ Redemption</button></td>
       </tr>`;
@@ -497,7 +501,7 @@
   // ---------- Boot ----------
   function fillSelect(id,arr,valKey,labKey){ document.getElementById(id).innerHTML = arr.map(o=>`<option value="${valKey?o[valKey]:o}">${labKey?o[labKey]:o}</option>`).join(""); }
   fillSelect("mSector",SECTORS,"k","label"); fillSelect("mStatus",STATUS,"k","label"); fillSelect("mSource",SOURCES);
-  document.getElementById("mPlan").innerHTML = PLANS.map(p=>`<option value="${p.k}">${p.label} — $${p.fee}/mo${p.flat?"":" (only when 5+)"}</option>`).join("");
+  document.getElementById("mPlan").innerHTML = PLANS.map(p=>`<option value="${p.k}">${p.label} — up to $${p.fee}/mo (${p.target}+ customers)</option>`).join("");
 
   function render(){
     document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.tab===tab));
