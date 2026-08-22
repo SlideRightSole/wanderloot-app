@@ -50,6 +50,8 @@
   /* Redemption + QR */
   .redeem{display:grid; grid-template-columns:150px 1fr; gap:20px; align-items:center; background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px}
   .qrbox{background:#fff; border:1px solid var(--line); border-radius:14px; padding:12px; text-align:center}
+  .qr-logo{font-family:"Bricolage Grotesque"; font-weight:800; font-size:15px; line-height:1; color:var(--ink); text-align:left; margin:0 0 9px 2px}
+  .qr-logo span{color:var(--teal)}
   .qrbox svg{width:100%; height:auto; display:block}
   .qrbox .cap{font-size:11px; color:var(--muted); font-weight:700; margin-top:8px; letter-spacing:.02em}
   .redeem ol{margin:0 0 0 16px; font-size:14px; color:#3d545a}
@@ -147,6 +149,7 @@
       <div class="sect-label">How guests redeem — no app or login for your staff</div>
       <div class="redeem">
         <div class="qrbox">
+          <div class="qr-logo f">Wander<span>Loot</span></div>
           <div id="qr"></div>
           <div class="cap">EXAMPLE — your code sits on the counter</div>
         </div>
