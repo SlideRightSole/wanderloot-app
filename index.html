@@ -147,6 +147,35 @@
     .mockrow { display: flex; gap: 8px; margin-top: 10px; }
     .mockrow .btn { padding: 12px; font-size: 14px; }
 
+    /* Redeem-at-shop (scan the shop's WanderLoot code) */
+    .redeemed-card { background: linear-gradient(180deg, rgba(55,226,176,0.18), rgba(55,226,176,0.05)); border: 1px solid var(--good); border-radius: 14px; padding: 14px; text-align: center; }
+    .redeemed-card .rc-check { width: 44px; height: 44px; border-radius: 50%; background: var(--good); color: #05271a; font-size: 26px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; }
+    .redeemed-card .rc-title { font-family: "Plus Jakarta Sans"; font-size: 18px; font-weight: 800; color: var(--good); }
+    .redeemed-card .rc-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .redeemed-card .rc-ref { font-size: 11px; color: var(--muted); margin-top: 10px; letter-spacing: 1px; }
+
+    .scan-overlay { position: fixed; inset: 0; z-index: 120; background: rgba(4,12,10,0.94); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; opacity: 0; animation: scanFade .22s ease forwards; }
+    @keyframes scanFade { to { opacity: 1; } }
+    .scan-overlay h3 { font-family: "Plus Jakarta Sans"; font-size: 20px; font-weight: 800; margin-bottom: 4px; color: #fff; }
+    .scan-overlay .scan-where { color: var(--muted); font-size: 14px; margin-bottom: 22px; }
+    .scan-view { position: relative; width: 232px; height: 232px; border-radius: 22px; background: rgba(255,255,255,0.03); overflow: hidden; }
+    .scan-view::before, .scan-view::after { content: ""; position: absolute; width: 42px; height: 42px; border: 4px solid var(--good); }
+    .scan-view .c1, .scan-view .c2 { position: absolute; width: 42px; height: 42px; border: 4px solid var(--good); }
+    .scan-view::before { top: 12px; left: 12px; border-right: 0; border-bottom: 0; border-radius: 10px 0 0 0; }
+    .scan-view::after { bottom: 12px; right: 12px; border-left: 0; border-top: 0; border-radius: 0 0 10px 0; }
+    .scan-view .c1 { top: 12px; right: 12px; border-left: 0; border-bottom: 0; border-radius: 0 10px 0 0; }
+    .scan-view .c2 { bottom: 12px; left: 12px; border-right: 0; border-top: 0; border-radius: 0 0 0 10px; }
+    .scan-laser { position: absolute; left: 16px; right: 16px; height: 3px; background: linear-gradient(90deg, transparent, var(--good), transparent); box-shadow: 0 0 14px 2px rgba(55,226,176,0.7); animation: laser 1.5s ease-in-out infinite; }
+    @keyframes laser { 0%,100% { top: 22px; } 50% { top: 206px; } }
+    .scan-qr { width: 118px; height: 118px; position: absolute; inset: 0; margin: auto; opacity: .5; }
+    .scan-hint { color: var(--muted); font-size: 13px; margin-top: 20px; max-width: 280px; }
+    .scan-actions { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 280px; }
+    .scan-success .scan-view { border: 1px solid var(--good); }
+    .scan-big-check { width: 96px; height: 96px; border-radius: 50%; background: var(--good); color: #05271a; font-size: 56px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin: 0 auto; animation: catchpop .4s ease; }
+    .scan-success h3 { color: var(--good); font-size: 24px; margin-top: 16px; }
+    .scan-offer { background: rgba(255,206,58,0.14); border: 1px dashed var(--sun); border-radius: 12px; padding: 12px 16px; margin: 14px 0 4px; color: #fff; font-weight: 700; font-size: 16px; max-width: 300px; }
+    .scan-staff { color: var(--good); font-weight: 800; font-size: 14px; margin-top: 10px; }
+
     /* burst */
     #burst { position: fixed; inset: 0; pointer-events: none; z-index: 80; overflow: hidden; }
     .confetti { position: absolute; width: 11px; height: 15px; top: 42%; left: 50%; border-radius: 3px; opacity: 0; animation: confetti 1s ease-out forwards; }
@@ -852,18 +881,79 @@
   }
   function renderVoucherAction() {
     const el = document.getElementById("voucherAction");
-    if (getRedeemed().includes(chosen.name)) {
-      el.innerHTML = '<div class="v-code">Already redeemed. Code<span>' + codeFor(chosen.name) + '</span></div>';
-      return;
+    if (getRedeemed().includes(chosen.name)) { el.innerHTML = redeemedCardHTML(); return; }
+    el.innerHTML = '<button class="btn v-btn" id="redeemBtn">Redeem now</button>' +
+                   '<div style="font-size:11px;color:var(--muted);margin-top:8px;">Scan the WanderLoot code at the counter to claim.</div>';
+    document.getElementById("redeemBtn").addEventListener("click", openScanner);
+  }
+  function redeemedCardHTML() {
+    return '<div class="redeemed-card">' +
+             '<div class="rc-check">✓</div>' +
+             '<div class="rc-title">Redeemed — show staff</div>' +
+             '<div class="rc-sub">' + chosen.offer + '</div>' +
+             '<div class="rc-ref">Ref ' + codeFor(chosen.name) + ' · ' + nowTime() + '</div>' +
+           '</div>';
+  }
+  function nowTime() { const d = new Date(); let h = d.getHours(), m = d.getMinutes(); const ap = h >= 12 ? "pm" : "am"; h = h % 12 || 12; return h + ":" + (m < 10 ? "0" : "") + m + ap; }
+  function qrSvg(seed) {
+    let h = 0; for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+    const N = 11, cell = 118 / N; let rects = "";
+    function rnd() { h = (h * 1103515245 + 12345) & 0x7fffffff; return (h >>> 8) / 0x800000; }
+    const finder = (x, y) =>
+      '<rect x="' + (x * cell) + '" y="' + (y * cell) + '" width="' + (cell * 3) + '" height="' + (cell * 3) + '" fill="#37e2b0"/>' +
+      '<rect x="' + ((x + 0.55) * cell) + '" y="' + ((y + 0.55) * cell) + '" width="' + (cell * 1.9) + '" height="' + (cell * 1.9) + '" fill="#040c0a"/>' +
+      '<rect x="' + ((x + 1) * cell) + '" y="' + ((y + 1) * cell) + '" width="' + cell + '" height="' + cell + '" fill="#37e2b0"/>';
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const inFinder = (x < 3 && y < 3) || (x > N - 4 && y < 3) || (x < 3 && y > N - 4);
+      if (inFinder) continue;
+      if (rnd() > 0.52) rects += '<rect x="' + (x * cell) + '" y="' + (y * cell) + '" width="' + cell + '" height="' + cell + '" fill="#37e2b0"/>';
     }
-    el.innerHTML = '<button class="btn v-btn" id="redeemBtn">Redeem now</button>';
-    document.getElementById("redeemBtn").addEventListener("click", () => {
-      const before = tierIndex(getPoints());
-      addRedeemed(chosen.name); addPoints(50);
-      el.innerHTML = '<div class="v-code">Show this at the counter<span>' + codeFor(chosen.name) + '</span></div>';
-      updateArriveProgress(false); refreshChrome(); checkTierUp(before);
-      toast("Stamp earned! +50 pts");
-    });
+    rects += finder(0, 0) + finder(N - 3, 0) + finder(0, N - 3);
+    return '<svg class="scan-qr" viewBox="0 0 118 118" xmlns="http://www.w3.org/2000/svg">' + rects + '</svg>';
+  }
+  function openScanner() {
+    if (document.getElementById("scanOverlay")) return;
+    const venue = chosen.name.split(",")[0];
+    const ov = document.createElement("div");
+    ov.className = "scan-overlay"; ov.id = "scanOverlay";
+    ov.innerHTML =
+      '<h3>Scan the shop code</h3>' +
+      '<div class="scan-where">Point at the WanderLoot code at ' + venue + '</div>' +
+      '<div class="scan-view">' + qrSvg(chosen.name) +
+        '<span class="c1"></span><span class="c2"></span><div class="scan-laser"></div></div>' +
+      '<div class="scan-hint">Hold steady over the code on the counter or table card.</div>' +
+      '<div class="scan-actions">' +
+        '<button class="btn" id="scanSimBtn">Simulate scan (demo)</button>' +
+        '<button class="btn ghost" id="scanCancel">Cancel</button>' +
+      '</div>';
+    document.body.appendChild(ov);
+    const auto = setTimeout(completeRedeem, 2600);
+    document.getElementById("scanSimBtn").addEventListener("click", () => { clearTimeout(auto); completeRedeem(); });
+    document.getElementById("scanCancel").addEventListener("click", () => { clearTimeout(auto); ov.remove(); });
+  }
+  function completeRedeem() {
+    const ov = document.getElementById("scanOverlay");
+    if (getRedeemed().includes(chosen.name)) { if (ov) ov.remove(); return; }
+    const before = tierIndex(getPoints());
+    addRedeemed(chosen.name); addPoints(50);
+    const venue = chosen.name.split(",")[0];
+    if (ov) {
+      ov.classList.add("scan-success");
+      ov.innerHTML =
+        '<div class="scan-big-check">✓</div>' +
+        '<h3>Redeemed!</h3>' +
+        '<div class="scan-where">at ' + venue + '</div>' +
+        '<div class="scan-offer">' + chosen.offer + '</div>' +
+        '<div class="scan-staff">Show this screen to staff</div>' +
+        '<div class="scan-hint">Ref ' + codeFor(chosen.name) + ' · ' + nowTime() + '</div>' +
+        '<div class="scan-actions"><button class="btn" id="scanDone">Done</button></div>';
+      burst();
+      document.getElementById("scanDone").addEventListener("click", () => ov.remove());
+    }
+    const va = document.getElementById("voucherAction");
+    if (va) va.innerHTML = redeemedCardHTML();
+    updateArriveProgress(false); refreshChrome(); checkTierUp(before);
+    toast("Redeemed! Stamp earned +50 pts");
   }
   function reviewMock() {
     const btn = document.getElementById("reviewBtn");
