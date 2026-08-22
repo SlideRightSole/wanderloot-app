@@ -171,7 +171,7 @@
     {k:"attraction",label:"Attraction",color:"#0fb894"},
   ];
   const SOURCES = ["Direct","EatClub","Groupon","Referral","Walk-in"];
-  const BILL_AT = 5, FEE = 29;
+  const BILL_AT = 5, FEE = 97;
   // Suburb centroids so any lead can be placed on the customer map.
   const SUBURB_COORDS = {
     "Surfers Paradise":[-28.0027,153.4309],"Broadbeach":[-28.0300,153.4310],"Broadbeach Waters":[-28.0380,153.4200],
@@ -271,7 +271,7 @@
   let editId = null;
 
   function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2400); }
-  const billing = p => p.redemptions >= BILL_AT;
+  const billing = p => p.redemptions >= BILL_AT;   // redemptions = THIS MONTH's delivered customers; 5+ triggers the $97 for the month
 
   // ---------- Overview ----------
   function renderOverview(){
@@ -287,8 +287,8 @@
     const liveNow = partners.filter(p=>p.status==="active" && p.lat!=null).length;
     let html = `<div class="livebar">🗺️ <b class="num">${liveNow}</b> partners are live on the customer map right now — set any partner to <b>Active</b> and they appear in the app instantly.</div><div class="kpis">
       ${kpi("Signed partners", signed.length, active.length+" live &amp; delivering")}
-      ${kpi("Billing", billingCount, "past "+BILL_AT+" redemptions","gold")}
-      ${kpi("Monthly revenue", "$"+mrr, billingCount+" &times; $"+FEE,"hero")}
+      ${kpi("Billing this month", billingCount, BILL_AT+"+ delivered this month","gold")}
+      ${kpi("This month's revenue", "$"+mrr, billingCount+" shops &times; $"+FEE,"hero")}
       ${kpi("Redemptions", totalRedemptions, "customers delivered")}
       ${kpi("In pipeline", pipelineCount, "leads &rarr; meetings")}
       ${kpi("Total on file", partners.length, "across "+new Set(partners.map(p=>p.suburb)).size+" suburbs")}
@@ -315,7 +315,7 @@
     // needs attention
     html += `<div class="card"><h3>Needs attention</h3>`;
     const items = [];
-    nearBill.forEach(p=>items.push({c:"var(--good)", b:p.name+" is 1 redemption from billing", p:p.redemptions+"/"+BILL_AT+" &mdash; one more customer and $"+FEE+"/mo starts."}));
+    nearBill.forEach(p=>items.push({c:"var(--good)", b:p.name+" is 1 from this month's $"+FEE, p:p.redemptions+"/"+BILL_AT+" this month &mdash; one more customer and $"+FEE+" is billed for the month."}));
     partners.filter(p=>p.status==="meeting").forEach(p=>items.push({c:"var(--violet)", b:p.name+" &mdash; meeting booked", p:"Close it. "+secCfg(p.sector).label+", "+p.suburb+"."}));
     partners.filter(p=>p.status==="interested").forEach(p=>items.push({c:"var(--gold)", b:p.name+" is interested", p:"Follow up while it's warm. "+p.phone}));
     if(!items.length) items.push({c:"var(--muted)", b:"All quiet", p:"No urgent follow-ups right now."});
@@ -339,7 +339,7 @@
       <select id="fSector"><option value="all">All sectors</option>${SECTORS.map(s=>`<option value="${s.k}" ${filterSector===s.k?"selected":""}>${s.label}</option>`).join("")}</select>
     </div>`;
     html += `<div class="tablewrap"><table><thead><tr>
-      <th>Business</th><th>Sector</th><th>Offer</th><th>Status</th><th>To billing</th><th>Contact</th><th></th>
+      <th>Business</th><th>Sector</th><th>Offer</th><th>Status</th><th>This month</th><th>Contact</th><th></th>
     </tr></thead><tbody>`;
     rows.forEach(p=>{
       const sc=sCfg(p.status), b=billing(p);
@@ -348,7 +348,7 @@
         <td><span class="pill" style="background:${secCfg(p.sector).color}18; color:${secCfg(p.sector).color}">${secCfg(p.sector).label}</span></td>
         <td style="max-width:220px">${p.offer}<div class="vsub">~$${p.value} · ${p.source}</div></td>
         <td><select class="statusSel" onchange="setStatus(${p.id}, this.value)">${STATUS.map(s=>`<option value="${s.k}" ${p.status===s.k?"selected":""}>${s.label}</option>`).join("")}</select></td>
-        <td>${ b ? `<span class="billy">Billing · $${FEE}/mo</span>` : `<div class="prog"><span class="num">${p.redemptions}/${BILL_AT}</span><span class="pt"><i style="width:${p.redemptions/BILL_AT*100}%"></i></span></div>` }</td>
+        <td>${ b ? `<span class="billy">Billing this month · $${FEE}</span>` : `<div class="prog"><span class="num">${p.redemptions}/${BILL_AT}</span><span class="pt"><i style="width:${p.redemptions/BILL_AT*100}%"></i></span></div>` }</td>
         <td class="vsub">${p.phone}</td>
         <td><button class="btn ghost sm" onclick="addRedemption(${p.id})">+ Redemption</button></td>
       </tr>`;
@@ -373,7 +373,7 @@
 
   // ---------- Actions ----------
   window.setStatus = (id,val)=>{ const p=partners.find(x=>x.id===id); if(p){p.status=val; save(); render(); toast(p.name+" → "+sCfg(val).label);} };
-  window.addRedemption = (id)=>{ const p=partners.find(x=>x.id===id); if(p){ p.redemptions++; if(p.status!=="active"&&(p.status==="signed"))p.status="active"; if(p.redemptions===BILL_AT){toast(p.name+" hit "+BILL_AT+" — billing now $"+FEE+"/mo! ");} else {toast(p.name+": "+p.redemptions+"/"+BILL_AT+" redemptions");} save(); render(); } };
+  window.addRedemption = (id)=>{ const p=partners.find(x=>x.id===id); if(p){ p.redemptions++; if(p.status!=="active"&&(p.status==="signed"))p.status="active"; if(p.redemptions===BILL_AT){toast(p.name+" hit "+BILL_AT+" this month — $"+FEE+" billed! ");} else {toast(p.name+": "+p.redemptions+"/"+BILL_AT+" this month");} save(); render(); } };
 
   window.openAdd = ()=>{ editId=null; document.getElementById("modalTitle").textContent="Add a business";
     document.getElementById("mName").value=""; document.getElementById("mSuburb").value=""; document.getElementById("mPhone").value="";
