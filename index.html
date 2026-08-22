@@ -164,6 +164,11 @@
     .av-big { width: 84px; height: 84px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 46px; box-shadow: 0 8px 22px rgba(0,0,0,0.3); }
     input.name { width: 100%; background: var(--panel-2); color: var(--text); border: 2px solid var(--line); border-radius: 14px; padding: 13px; font-size: 16px; font-weight: 700; font-family: "Plus Jakarta Sans"; text-align: center; }
     input.name::placeholder { color: var(--muted); }
+    .photo-pick { position: relative; display: inline-block; cursor: pointer; }
+    .photo-pick:active { transform: scale(0.97); }
+    .photo-badge { position: absolute; right: 2px; bottom: 2px; width: 30px; height: 30px; border-radius: 50%; background: var(--panel); border: 2px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 15px; box-shadow: 0 2px 8px rgba(20,40,60,0.16); }
+    .photo-hint { text-align: center; color: var(--muted); font-size: 13px; font-weight: 600; margin-top: 2px; }
+    .av-big, .av-face { overflow: hidden; background-repeat: no-repeat; background-position: center; background-size: cover; }
 
     /* Passport */
     .pass-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
@@ -221,17 +226,18 @@
     <!-- ONBOARD / AVATAR CREATOR -->
     <div id="onboard" class="hidden">
       <div class="card fade">
-        <h2 class="title f">Create your explorer</h2>
-        <p style="color:var(--muted);font-size:14px;margin-bottom:12px;">Your trainer for the mystery drives ahead.</p>
+        <h2 class="title f">Create your profile</h2>
+        <p style="color:var(--muted);font-size:14px;margin-bottom:18px;">Add a photo and your name — that's you.</p>
         <div class="av-preview">
-          <div class="av-big" id="avBig">🦊</div>
+          <label class="photo-pick" id="photoPick">
+            <div class="av-big" id="avBig">?</div>
+            <span class="photo-badge">📷</span>
+            <input type="file" id="photoInput" accept="image/*" hidden>
+          </label>
+          <div class="photo-hint" id="photoHint">Tap to add a photo</div>
         </div>
-        <input class="name" id="avNameInput" maxlength="18" placeholder="Your explorer name" />
-        <div class="label" style="margin-top:16px;">Pick a character</div>
-        <div class="av-grid" id="avGrid"></div>
-        <div class="label" style="margin-top:14px;">Pick a colour</div>
-        <div class="col-grid" id="colGrid"></div>
-        <button class="btn" id="saveAvatar" style="margin-top:12px;">Start exploring</button>
+        <input class="name" id="avNameInput" maxlength="18" placeholder="Your name" />
+        <button class="btn" id="saveAvatar" style="margin-top:18px;">Start exploring</button>
       </div>
     </div>
 
@@ -555,45 +561,71 @@
   function bearingName(deg) { return ["North","North-East","East","South-East","South","South-West","West","North-West"][Math.round(deg/45) % 8]; }
 
   // ============ Avatar / onboarding ============
-  let draft = { name: "", avatar: AVATARS[0], color: COLORS[0] };
-  function buildAvatarPickers() {
-    const ag = document.getElementById("avGrid"); ag.innerHTML = "";
-    AVATARS.forEach(a => {
-      const d = document.createElement("div");
-      d.className = "av-pick" + (a === draft.avatar ? " sel" : "");
-      d.textContent = a;
-      d.onclick = () => { draft.avatar = a; buildAvatarPickers(); renderAvatarPreview(); };
-      ag.appendChild(d);
-    });
-    const cg = document.getElementById("colGrid"); cg.innerHTML = "";
-    COLORS.forEach(c => {
-      const d = document.createElement("div");
-      d.className = "col-pick" + (c === draft.color ? " sel" : "");
-      d.style.background = c;
-      d.onclick = () => { draft.color = c; buildAvatarPickers(); renderAvatarPreview(); };
-      cg.appendChild(d);
-    });
+  let draft = { name: "", photo: null };
+
+  // Paint any circular avatar element: photo if set, otherwise the name's initial.
+  function paintAvatar(el, p) {
+    if (!el) return;
+    if (p && p.photo) {
+      el.style.backgroundImage = "url(" + p.photo + ")";
+      el.style.backgroundSize = "cover";
+      el.style.backgroundPosition = "center";
+      el.textContent = "";
+    } else {
+      el.style.backgroundImage = "none";
+      el.style.background = "var(--teal)";
+      el.style.color = "#fff";
+      el.textContent = (p && p.name ? p.name.trim().charAt(0).toUpperCase() : "") || "?";
+    }
   }
-  function renderAvatarPreview() {
-    const big = document.getElementById("avBig");
-    big.textContent = draft.avatar; big.style.background = draft.color;
+
+  // Read a photo file, crop to a centred square and shrink it so it fits in local storage.
+  function resizePhoto(file, cb) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const size = 320, c = document.createElement("canvas");
+        c.width = size; c.height = size;
+        const s = Math.min(img.width, img.height);
+        c.getContext("2d").drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
+        cb(c.toDataURL("image/jpeg", 0.82));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
   }
-  function openOnboard(edit) {
+
+  document.getElementById("photoInput").addEventListener("change", e => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    resizePhoto(file, url => {
+      draft.photo = url;
+      paintAvatar(document.getElementById("avBig"), draft);
+      document.getElementById("photoHint").textContent = "Tap to change photo";
+    });
+  });
+
+  function openOnboard() {
     const p = getProfile();
-    draft = p ? { ...p } : { name: "", avatar: AVATARS[0], color: COLORS[0] };
+    draft = p ? { name: p.name || "", photo: p.photo || null } : { name: "", photo: null };
     document.getElementById("avNameInput").value = draft.name || "";
-    buildAvatarPickers(); renderAvatarPreview();
+    document.getElementById("photoHint").textContent = draft.photo ? "Tap to change photo" : "Tap to add a photo";
+    paintAvatar(document.getElementById("avBig"), draft);
     showOnly("onboard");
   }
-  document.getElementById("avNameInput").addEventListener("input", e => draft.name = e.target.value);
+  document.getElementById("avNameInput").addEventListener("input", e => {
+    draft.name = e.target.value;
+    if (!draft.photo) paintAvatar(document.getElementById("avBig"), draft);
+  });
   document.getElementById("saveAvatar").addEventListener("click", () => {
     draft.name = (document.getElementById("avNameInput").value || "Explorer").trim() || "Explorer";
-    LS.set("md_profile", draft);
+    LS.set("md_profile", { name: draft.name, photo: draft.photo || null });
     refreshChrome();
     showOnly("setup");
     toast("Welcome, " + draft.name + "!");
   });
-  document.getElementById("avatarChip").addEventListener("click", () => openOnboard(true));
+  document.getElementById("avatarChip").addEventListener("click", openOnboard);
 
   // ============ Chrome (avatar chip + tier + nav) ============
   function refreshChrome() {
@@ -601,8 +633,7 @@
     const chip = document.getElementById("avatarChip");
     if (p) {
       chip.classList.remove("hidden");
-      const f = document.getElementById("chipFace");
-      f.textContent = p.avatar; f.style.background = p.color;
+      paintAvatar(document.getElementById("chipFace"), p);
       document.getElementById("chipName").textContent = p.name;
       document.getElementById("chipTier").textContent = tierFor(getPoints()).name;
     } else {
@@ -894,9 +925,8 @@
 
   document.getElementById("openPassport").addEventListener("click", () => {
     showOnly("passportView");
-    const p = getProfile() || { name: "Explorer", avatar: "🦊", color: COLORS[0] };
-    const face = document.getElementById("passFace");
-    face.textContent = p.avatar; face.style.background = p.color;
+    const p = getProfile() || { name: "Explorer", photo: null };
+    paintAvatar(document.getElementById("passFace"), p);
     document.getElementById("passName").textContent = p.name;
     document.getElementById("passTier").textContent = tierFor(getPoints()).name + " · " + getPoints() + " pts";
     const redeemed = getRedeemed(), visited = getVisited().map(v => v.name);
