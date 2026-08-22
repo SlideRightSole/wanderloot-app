@@ -483,6 +483,7 @@
     { name: "Cellar Door Wine Bar, Newtown", lat: -33.8975, lng: 151.1795, cat: "nightlife", budget: 2, adult: true, tier: "standard", offer: "Free tasting flight", value: 18, closes: "11:00pm", hint: "Candlelight and a wall of natural wine." },
 
     // ===== Gold Coast partner venues (illustrative names, carry vouchers) =====
+    { name: "Curtis Falls Walking Track, Tamborine Mountain", lat: -27.9765, lng: 153.1893, cat: "nature", budget: 0, tier: "standard", closes: "dusk", hint: "Follow the rainforest gully down to a waterfall and a glow-worm-lined pool." },
     { name: "Broadbeach Woodfired Kitchen, Broadbeach", lat: -28.0300, lng: 153.4300, cat: "eat", budget: 2, tier: "priority", offer: "Free wood-fired pizza with any two mains", value: 32, closes: "9:30pm", hint: "Charred crusts and a buzzing room a block from the sand." },
     { name: "Palm Beach Espresso, Palm Beach", lat: -28.1150, lng: 153.4650, cat: "eat", budget: 1, tier: "priority", offer: "Free house pastry with any coffee", value: 8, closes: "2:30pm", hint: "Surfers, sand and the best flat white on the strip." },
     { name: "Currumbin Beach Grill, Currumbin", lat: -28.1330, lng: 153.4840, cat: "eat", budget: 2, tier: "standard", offer: "Free garlic bread and a drink with any main", value: 18, closes: "9:00pm", hint: "Salt air and steaks by the estuary." },
@@ -719,6 +720,7 @@
     if (firstTime && !LS.get("md_welcomed", false)) { LS.set("md_welcomed", true); addPoints(30); bumpStreak(); } // endowed progress
     refreshChrome();
     showOnly("setup");
+    applyTestTarget();
     toast(firstTime ? "Welcome, " + draft.name + "! +30 pts to start you off 🎉" : "Profile updated");
   });
   document.getElementById("termsLink").addEventListener("click", e => { e.preventDefault(); toast("Full Terms & safety policy: wanderloot.com.au/terms"); });
@@ -1187,9 +1189,19 @@
     };
   }
 
+  // ============ Test hook: #go=<name> jumps straight to navigating that destination ============
+  function applyTestTarget() {
+    const mm = (location.hash.match(/go=([^&]+)/) || [])[1];
+    if (!mm) return false;
+    const q = decodeURIComponent(mm).toLowerCase();
+    const dest = PLACES.find(p => p.name.toLowerCase().includes(q));
+    if (dest) { chosen = dest; showResult(); return true; }
+    return false;
+  }
+
   // ============ Boot ============
   refreshChrome();
-  if (getProfile()) showOnly("setup"); else openOnboard(false);
+  if (getProfile()) { showOnly("setup"); applyTestTarget(); } else openOnboard(false);
   </script>
 </body>
 </html>
