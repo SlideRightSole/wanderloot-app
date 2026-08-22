@@ -1,0 +1,113 @@
+<title>WanderLoot Partner Plans</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#eef3f3; --card:#ffffff; --panel:#f7fbfa; --ink:#0f2329; --muted:#5d7178;
+    --teal:#0fb894; --teal-deep:#0a7d67; --teal-ink:#063f34;
+    --gold:#e0a01c; --gold-soft:#fbf0d5; --line:#e0eae8; --good:#12b886;
+    --shadow:0 18px 44px rgba(10,60,52,.10);
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  body{ background:var(--paper); color:var(--ink); font-family:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased; padding:30px 16px 60px; }
+  .f{font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif}
+  .wrap{max-width:1000px; margin:0 auto}
+  .head{ text-align:center; margin-bottom:26px; }
+  .eyebrow{ font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--teal-deep); margin-bottom:12px; }
+  .wordmark{ font-size:34px; font-weight:800; letter-spacing:-.02em; }
+  .wordmark span{ color:var(--teal) }
+  .wordmark small{ display:inline-block; font-family:"Plus Jakarta Sans"; font-size:10px; font-weight:700; vertical-align:middle; color:var(--gold); border:1.5px solid var(--gold); border-radius:20px; padding:3px 9px; margin-left:8px; letter-spacing:.04em; }
+  .head h1{ font-family:"Bricolage Grotesque"; font-size:28px; font-weight:800; margin-top:14px; text-wrap:balance; }
+  .head p{ font-size:16px; color:#20393f; max-width:60ch; margin:8px auto 0; }
+
+  .plans{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; align-items:start; margin-top:8px; }
+  .plan{ background:var(--card); border:1px solid var(--line); border-radius:20px; padding:24px 20px; box-shadow:var(--shadow); position:relative; display:flex; flex-direction:column; }
+  .plan.mid{ border:2px solid var(--gold); box-shadow:0 22px 50px rgba(224,160,28,.18); }
+  .ribbon{ position:absolute; top:-13px; left:50%; transform:translateX(-50%); background:var(--gold); color:#3a2400; font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; padding:5px 14px; border-radius:20px; white-space:nowrap; }
+  .plan h2{ font-family:"Bricolage Grotesque"; font-size:22px; font-weight:800; }
+  .plan .tag{ font-size:13px; color:var(--muted); font-weight:600; margin:4px 0 16px; min-height:34px; }
+  .price{ display:flex; align-items:baseline; gap:4px; }
+  .price .n{ font-family:"Bricolage Grotesque"; font-weight:800; font-size:40px; line-height:1; color:var(--teal-ink); font-variant-numeric:tabular-nums; }
+  .price .per{ font-size:14px; color:var(--muted); font-weight:700; }
+  .billed{ font-size:12.5px; font-weight:700; color:var(--teal-deep); background:#effbf7; border:1px solid #cdeee4; border-radius:10px; padding:7px 10px; margin:12px 0 18px; }
+  .plan.mid .billed{ color:#8a6a10; background:var(--gold-soft); border-color:#eed6a2; }
+  ul{ list-style:none; display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
+  li{ font-size:13.5px; color:#2c4249; display:flex; gap:9px; align-items:flex-start; }
+  li .ck{ color:var(--good); font-weight:800; flex:0 0 auto; }
+  li b{ color:var(--ink); }
+  .best{ margin-top:auto; font-size:12.5px; color:var(--muted); font-weight:700; border-top:1px solid var(--line); padding-top:14px; }
+  .best b{ color:var(--teal-ink); }
+
+  .foot{ max-width:760px; margin:24px auto 0; text-align:center; }
+  .foot .line{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 20px; font-size:14px; color:#2c4249; font-weight:600; box-shadow:var(--shadow); }
+  .foot .line b{ color:var(--teal-deep); }
+  .foot .sub{ font-size:12px; color:var(--muted); margin-top:12px; }
+
+  @media(max-width:760px){ .plans{ grid-template-columns:1fr; } .plan.mid{ order:-1; } }
+</style>
+
+<div class="wrap">
+  <div class="head">
+    <div class="eyebrow">For Gold Coast venues</div>
+    <div class="wordmark f">Wander<span>Loot</span><small>PARTNERS</small></div>
+    <h1>Choose how hard WanderLoot works for you.</h1>
+    <p>Every plan sends you new customers who weren't looking for you. Start risk-free, then step up for more reach whenever you're ready.</p>
+  </div>
+
+  <div class="plans">
+    <!-- STARTER -->
+    <div class="plan">
+      <h2>Starter</h2>
+      <div class="tag">Try it with zero risk.</div>
+      <div class="price"><span class="n">$97</span><span class="per">/mo</span></div>
+      <div class="billed">Charged <b>only</b> in months we bring you 5+ customers — quiet months are free.</div>
+      <ul>
+        <li><span class="ck">✓</span><span>Shown to nearby explorers as a mystery destination</span></li>
+        <li><span class="ck">✓</span><span>One <b>acquisition offer</b> to win first-time customers</span></li>
+        <li><span class="ck">✓</span><span>Every redemption logged &amp; visible</span></li>
+        <li><span class="ck">✓</span><span>Cancel anytime, no lock-in</span></li>
+      </ul>
+      <div class="best"><b>Best for:</b> testing the waters with no upfront cost.</div>
+    </div>
+
+    <!-- GROWTH -->
+    <div class="plan mid">
+      <div class="ribbon">Most popular</div>
+      <h2>Growth</h2>
+      <div class="tag">Steady, growing volume of customers.</div>
+      <div class="price"><span class="n">$199</span><span class="per">/mo</span></div>
+      <div class="billed">Flat monthly — <b>priority</b> means we send you customers far more often.</div>
+      <ul>
+        <li><span class="ck">✓</span><span><b>Priority placement</b> — chosen as the mystery destination more often</span></li>
+        <li><span class="ck">✓</span><span>Wider reach — a bigger radius and more customer moods</span></li>
+        <li><span class="ck">✓</span><span>Unlocks a <b>loyalty offer</b> to bring customers back, not just once</span></li>
+        <li><span class="ck">✓</span><span>Customer analytics — who we delivered and your busiest nights</span></li>
+        <li><span class="ck">✓</span><span>Everything in Starter</span></li>
+      </ul>
+      <div class="best"><b>Best for:</b> venues that want reliable, growing foot traffic.</div>
+    </div>
+
+    <!-- FEATURED -->
+    <div class="plan">
+      <h2>Featured</h2>
+      <div class="tag">Own your strip.</div>
+      <div class="price"><span class="n">$399</span><span class="per">/mo</span></div>
+      <div class="billed">Flat monthly — <b>top billing</b> and maximum exposure across the app.</div>
+      <ul>
+        <li><span class="ck">✓</span><span><b>Top &amp; "featured" placement</b> — first pick, shown to premium-tier explorers</span></li>
+        <li><span class="ck">✓</span><span>Maximum reach across the whole region</span></li>
+        <li><span class="ck">✓</span><span><b>Multiple / rotating offers</b></span></li>
+        <li><span class="ck">✓</span><span>Sponsor the monthly leaderboard prize — a big brand moment</span></li>
+        <li><span class="ck">✓</span><span>Priority support &amp; a monthly performance report</span></li>
+      </ul>
+      <div class="best"><b>Best for:</b> flagship venues that want to dominate the Gold Coast.</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="line">Not sure? <b>Start on Starter — you pay nothing until we've delivered 5 customers.</b> Upgrade the moment you can see it working.</div>
+    <div class="sub">Prices in AUD. Cancel or change plan anytime. WanderLoot · wanderloot.com.au</div>
+  </div>
+</div>

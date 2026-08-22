@@ -86,6 +86,7 @@
   .prog .pt{width:70px; height:8px; background:var(--panel-2); border-radius:99px; overflow:hidden}
   .prog .pt i{display:block; height:100%; background:var(--gold); border-radius:99px}
   .billy{color:var(--good); font-weight:800; font-size:12px}
+  .planpill{font-size:10px; font-weight:800; padding:1px 7px; border-radius:20px}
   .statusSel{border:1px solid var(--line); border-radius:8px; padding:5px 8px; font-size:12px; font-weight:700; background:var(--panel); color:var(--ink)}
 
   /* pipeline columns */
@@ -148,6 +149,7 @@
       <div class="fld"><label>Est. value ($)</label><input id="mValue" type="number" placeholder="30"></div>
       <div class="fld"><label>Source</label><select id="mSource"></select></div>
     </div>
+    <div class="fld"><label>Plan</label><select id="mPlan"></select></div>
     <div class="modal-actions">
       <button class="btn ghost" id="mCancel">Cancel</button>
       <button class="btn" id="mSave">Save business</button>
@@ -175,6 +177,13 @@
   ];
   const SOURCES = ["Direct","EatClub","Groupon","Referral","Walk-in"];
   const BILL_AT = 5, FEE = 97;
+  // Partner plans (good/better/best). Starter = pay only in months with 5+; Growth/Featured = flat while Active.
+  const PLANS = [
+    { k:"starter",  label:"Starter",  fee:97,  flat:false, color:"#8a97a0" },
+    { k:"growth",   label:"Growth",   fee:199, flat:true,  color:"#e0a01c" },
+    { k:"featured", label:"Featured", fee:399, flat:true,  color:"#0fb894" }
+  ];
+  const planOf = p => PLANS.find(x => x.k === (p.plan || "starter")) || PLANS[0];
   // Suburb centroids so any lead can be placed on the customer map.
   const SUBURB_COORDS = {
     "Surfers Paradise":[-28.0027,153.4309],"Broadbeach":[-28.0300,153.4310],"Broadbeach Waters":[-28.0380,153.4200],
@@ -343,7 +352,8 @@
   let editId = null;
 
   function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2400); }
-  const billing = p => p.redemptions >= BILL_AT;   // redemptions = THIS MONTH's delivered customers; 5+ triggers the $97 for the month
+  // Starter bills only in a month with 5+ redemptions; flat plans (Growth/Featured) bill while Active.
+  function billing(p){ const pl = planOf(p); return pl.flat ? p.status === "active" : p.redemptions >= BILL_AT; }
 
   // ---------- Overview ----------
   function renderOverview(){
@@ -352,15 +362,15 @@
     const billingCount = partners.filter(billing).length;
     const totalRedemptions = partners.reduce((a,p)=>a+p.redemptions,0);
     const pipelineCount = partners.filter(p=>["lead","contacted","interested","meeting"].includes(p.status)).length;
-    const mrr = billingCount * FEE;
+    const mrr = partners.filter(billing).reduce((s,p)=>s+planOf(p).fee,0);
     const nearBill = partners.filter(p=>!billing(p) && p.redemptions>0 && p.redemptions>=BILL_AT-1);
 
     const kpi = (k,v,s,cls="")=>`<div class="kpi ${cls}"><div class="k">${k}</div><div class="v num">${v}</div><div class="s">${s}</div></div>`;
     const liveNow = partners.filter(p=>p.status==="active" && p.lat!=null).length;
     let html = `<div class="livebar">🗺️ <b class="num">${liveNow}</b> partners are live on the customer map right now — set any partner to <b>Active</b> and they appear in the app instantly.</div><div class="kpis">
       ${kpi("Signed partners", signed.length, active.length+" live &amp; delivering")}
-      ${kpi("Billing this month", billingCount, BILL_AT+"+ delivered this month","gold")}
-      ${kpi("This month's revenue", "$"+mrr, billingCount+" partners &times; $"+FEE,"hero")}
+      ${kpi("Billing now", billingCount, "partners on a paid plan","gold")}
+      ${kpi("Monthly revenue", "$"+mrr.toLocaleString(), billingCount+" partners across 3 plans","hero")}
       ${kpi("Redemptions", totalRedemptions, "customers delivered")}
       ${kpi("In pipeline", pipelineCount, "leads &rarr; meetings")}
       ${kpi("Total on file", partners.length, "across "+new Set(partners.map(p=>p.suburb)).size+" suburbs")}
@@ -419,11 +429,11 @@
     rows.forEach(p=>{
       const sc=sCfg(p.status), b=billing(p);
       html += `<tr>
-        <td><div class="vname" onclick="openEdit(${p.id})" style="cursor:pointer">${p.name}</div><div class="vsub">${p.suburb}</div></td>
+        <td><div class="vname" onclick="openEdit(${p.id})" style="cursor:pointer">${p.name}</div><div class="vsub">${p.suburb} · <span class="planpill" style="background:${planOf(p).color}1e; color:${planOf(p).color}">${planOf(p).label}</span></div></td>
         <td><span class="pill" style="background:${secCfg(p.sector).color}18; color:${secCfg(p.sector).color}">${secCfg(p.sector).label}</span></td>
         <td style="max-width:240px">${p.offer && p.offer!=="—" ? p.offer : '<span class="vsub">No WanderLoot offer set yet</span>'}<div class="vsub">~$${p.value} · ${p.source}${isWarm(p)?` · `+dealLink(p,"their current deal"):""}</div></td>
         <td><select class="statusSel" onchange="setStatus(${p.id}, this.value)">${STATUS.map(s=>`<option value="${s.k}" ${p.status===s.k?"selected":""}>${s.label}</option>`).join("")}</select></td>
-        <td>${ b ? `<span class="billy">Billing this month · $${FEE}</span>` : `<div class="prog"><span class="num">${p.redemptions}/${BILL_AT}</span><span class="pt"><i style="width:${p.redemptions/BILL_AT*100}%"></i></span></div>` }</td>
+        <td>${ b ? `<span class="billy">$${planOf(p).fee}/mo</span>` : (planOf(p).flat ? `<span class="vsub">Bills when Active</span>` : `<div class="prog"><span class="num">${p.redemptions}/${BILL_AT}</span><span class="pt"><i style="width:${p.redemptions/BILL_AT*100}%"></i></span></div>`) }</td>
         <td class="vsub">${p.phone}</td>
         <td><button class="btn ghost sm" onclick="addRedemption(${p.id})">+ Redemption</button></td>
       </tr>`;
@@ -458,7 +468,7 @@
   window.openAdd = ()=>{ editId=null; document.getElementById("modalTitle").textContent="Add a business";
     document.getElementById("mName").value=""; document.getElementById("mSuburb").value=""; document.getElementById("mPhone").value="";
     document.getElementById("mOffer").value=""; document.getElementById("mValue").value="";
-    document.getElementById("mSector").value=SECTORS[0].k; document.getElementById("mStatus").value="lead"; document.getElementById("mSource").value=SOURCES[0];
+    document.getElementById("mSector").value=SECTORS[0].k; document.getElementById("mStatus").value="lead"; document.getElementById("mSource").value=SOURCES[0]; document.getElementById("mPlan").value="starter";
     document.getElementById("mDeal").innerHTML=""; document.getElementById("mSave").textContent="Save business"; document.getElementById("modal").classList.add("on"); };
   const dash=s=> (s&&s!=="—")?s:"";
   window.openEdit = (id)=>{ const p=partners.find(x=>x.id===id); if(!p) return; editId=id;
@@ -467,7 +477,7 @@
     document.getElementById("mSuburb").value=dash(p.suburb); document.getElementById("mPhone").value=dash(p.phone);
     document.getElementById("mOffer").value=dash(p.offer); document.getElementById("mValue").value=p.value||"";
     document.getElementById("mSector").value=p.sector; document.getElementById("mStatus").value=p.status;
-    document.getElementById("mSource").value=p.source||SOURCES[0];
+    document.getElementById("mSource").value=p.source||SOURCES[0]; document.getElementById("mPlan").value=p.plan||"starter";
     document.getElementById("mDeal").innerHTML = isWarm(p) ? `Currently advertises on <b>${p.source}</b> — `+dealLink(p,"see their live deal") : "";
     document.getElementById("mSave").textContent="Save changes"; document.getElementById("modal").classList.add("on"); };
   document.getElementById("mCancel").onclick=()=>document.getElementById("modal").classList.remove("on");
@@ -479,7 +489,7 @@
       sector:document.getElementById("mSector").value, suburb:document.getElementById("mSuburb").value.trim()||"—",
       phone:document.getElementById("mPhone").value.trim()||"—", status:document.getElementById("mStatus").value,
       offer:document.getElementById("mOffer").value.trim()||"—", value:+document.getElementById("mValue").value||0,
-      source:document.getElementById("mSource").value };
+      source:document.getElementById("mSource").value, plan:document.getElementById("mPlan").value };
     if(editId!=null){ const p=partners.find(x=>x.id===editId); if(p) Object.assign(p,fields); save(); document.getElementById("modal").classList.remove("on"); render(); toast(name+" updated"); }
     else { partners.unshift({ id:Math.max(0,...partners.map(p=>p.id))+1, ...fields, redemptions:0 }); save(); document.getElementById("modal").classList.remove("on"); render(); toast(name+" added"); }
   };
@@ -487,6 +497,7 @@
   // ---------- Boot ----------
   function fillSelect(id,arr,valKey,labKey){ document.getElementById(id).innerHTML = arr.map(o=>`<option value="${valKey?o[valKey]:o}">${labKey?o[labKey]:o}</option>`).join(""); }
   fillSelect("mSector",SECTORS,"k","label"); fillSelect("mStatus",STATUS,"k","label"); fillSelect("mSource",SOURCES);
+  document.getElementById("mPlan").innerHTML = PLANS.map(p=>`<option value="${p.k}">${p.label} — $${p.fee}/mo${p.flat?"":" (only when 5+)"}</option>`).join("");
 
   function render(){
     document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.tab===tab));
