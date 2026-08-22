@@ -143,6 +143,7 @@
       <div class="fld"><label>Status</label><select id="mStatus"></select></div>
     </div>
     <div class="fld"><label>Offer (voucher)</label><input id="mOffer" placeholder="Free garlic pizza with any two mains"></div>
+    <div class="vsub" id="mDeal" style="margin:2px 0 4px"></div>
     <div class="fld-row">
       <div class="fld"><label>Est. value ($)</label><input id="mValue" type="number" placeholder="30"></div>
       <div class="fld"><label>Source</label><select id="mSource"></select></div>
@@ -417,7 +418,7 @@
       html += `<tr>
         <td><div class="vname" onclick="openEdit(${p.id})" style="cursor:pointer">${p.name}</div><div class="vsub">${p.suburb}</div></td>
         <td><span class="pill" style="background:${secCfg(p.sector).color}18; color:${secCfg(p.sector).color}">${secCfg(p.sector).label}</span></td>
-        <td style="max-width:220px">${p.offer}<div class="vsub">~$${p.value} · ${p.source}</div></td>
+        <td style="max-width:240px">${p.offer && p.offer!=="—" ? p.offer : '<span class="vsub">No WanderLoot offer set yet</span>'}<div class="vsub">~$${p.value} · ${p.source}${isWarm(p)?` · `+dealLink(p,"their current deal"):""}</div></td>
         <td><select class="statusSel" onchange="setStatus(${p.id}, this.value)">${STATUS.map(s=>`<option value="${s.k}" ${p.status===s.k?"selected":""}>${s.label}</option>`).join("")}</select></td>
         <td>${ b ? `<span class="billy">Billing this month · $${FEE}</span>` : `<div class="prog"><span class="num">${p.redemptions}/${BILL_AT}</span><span class="pt"><i style="width:${p.redemptions/BILL_AT*100}%"></i></span></div>` }</td>
         <td class="vsub">${p.phone}</td>
@@ -435,12 +436,17 @@
     STATUS.forEach(s=>{
       const list = partners.filter(p=>p.status===s.k);
       html += `<div class="col"><h4 style="color:${s.color}">${s.label}<span class="c num">${list.length}</span></h4>${
-        list.map(p=>`<div class="vcard" onclick="openEdit(${p.id})" title="Open ${(p.name||'').replace(/"/g,'')}"><b>${p.name}</b><div class="m">${secCfg(p.sector).label} · ${p.suburb}</div>${p.phone&&p.phone!=="—"?`<div class="m">📞 ${p.phone}</div>`:""}${p.redemptions>0?`<div class="m num">${p.redemptions}/${BILL_AT} this month</div>`:""}</div>`).join("") || `<div class="m" style="color:var(--muted);font-size:12px;padding:4px">Empty</div>`
+        list.map(p=>`<div class="vcard" onclick="openEdit(${p.id})" title="Open ${(p.name||'').replace(/"/g,'')}"><b>${p.name}</b><div class="m">${secCfg(p.sector).label} · ${p.suburb}</div>${p.phone&&p.phone!=="—"?`<div class="m">📞 ${p.phone}</div>`:""}${isWarm(p)?`<div class="m">💸 `+dealLink(p,"their "+p.source+" deal")+`</div>`:""}${p.redemptions>0?`<div class="m num">${p.redemptions}/${BILL_AT} this month</div>`:""}</div>`).join("") || `<div class="m" style="color:var(--muted);font-size:12px;padding:4px">Empty</div>`
       }</div>`;
     });
     html += `</div>`;
     return html;
   }
+
+  // A "warm" lead already advertises deals on EatClub/Groupon — link straight to their live deal.
+  const isWarm = p => p.source && p.source!=="Direct" && p.source!=="—";
+  function dealSearch(p){ const plat = isWarm(p)?p.source:"voucher deal"; return "https://www.google.com/search?q="+encodeURIComponent((p.name||"")+" "+(p.suburb||"")+" "+plat); }
+  function dealLink(p, label){ return `<a href="${dealSearch(p)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--teal-deep);font-weight:800;text-decoration:none">${label} ↗</a>`; }
 
   // ---------- Actions ----------
   window.setStatus = (id,val)=>{ const p=partners.find(x=>x.id===id); if(p){p.status=val; save(); render(); toast(p.name+" → "+sCfg(val).label);} };
@@ -450,7 +456,7 @@
     document.getElementById("mName").value=""; document.getElementById("mSuburb").value=""; document.getElementById("mPhone").value="";
     document.getElementById("mOffer").value=""; document.getElementById("mValue").value="";
     document.getElementById("mSector").value=SECTORS[0].k; document.getElementById("mStatus").value="lead"; document.getElementById("mSource").value=SOURCES[0];
-    document.getElementById("mSave").textContent="Save business"; document.getElementById("modal").classList.add("on"); };
+    document.getElementById("mDeal").innerHTML=""; document.getElementById("mSave").textContent="Save business"; document.getElementById("modal").classList.add("on"); };
   const dash=s=> (s&&s!=="—")?s:"";
   window.openEdit = (id)=>{ const p=partners.find(x=>x.id===id); if(!p) return; editId=id;
     document.getElementById("modalTitle").textContent=p.name;
@@ -459,6 +465,7 @@
     document.getElementById("mOffer").value=dash(p.offer); document.getElementById("mValue").value=p.value||"";
     document.getElementById("mSector").value=p.sector; document.getElementById("mStatus").value=p.status;
     document.getElementById("mSource").value=p.source||SOURCES[0];
+    document.getElementById("mDeal").innerHTML = isWarm(p) ? `Currently advertises on <b>${p.source}</b> — `+dealLink(p,"see their live deal") : "";
     document.getElementById("mSave").textContent="Save changes"; document.getElementById("modal").classList.add("on"); };
   document.getElementById("mCancel").onclick=()=>document.getElementById("modal").classList.remove("on");
   document.getElementById("modal").addEventListener("click",e=>{ if(e.target.id==="modal") e.target.classList.remove("on"); });
