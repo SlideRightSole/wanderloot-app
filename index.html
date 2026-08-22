@@ -214,6 +214,14 @@
     .share-actions{ display:flex; gap:10px; width:100%; max-width:330px; margin-top:16px } .share-actions .btn{ flex:1 }
     .sc-hint{ margin-top:12px; font-size:12px; color:rgba(255,255,255,.6); font-weight:600; text-align:center }
 
+    /* Turn-by-turn banner */
+    .nav-banner{ display:flex; align-items:center; gap:12px; background:linear-gradient(135deg,#0a7d67,#0c9c7f); color:#fff; border-radius:16px; padding:13px 13px; margin:2px 0 14px; box-shadow:0 10px 24px rgba(10,125,103,.3); text-align:left }
+    .nav-man{ flex:0 0 46px; width:46px; height:46px; border-radius:12px; background:rgba(255,255,255,.16); display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:800 }
+    .nav-txt{ flex:1; min-width:0 }
+    .nav-inst{ font-family:"Plus Jakarta Sans"; font-weight:800; font-size:17px; line-height:1.2 }
+    .nav-dist{ font-size:13px; color:#bff0e2; font-weight:700; margin-top:2px }
+    .nav-mute{ flex:0 0 auto; background:rgba(255,255,255,.16); border:none; color:#fff; width:40px; height:40px; border-radius:10px; font-size:18px; cursor:pointer }
+
     /* burst */
     #burst { position: fixed; inset: 0; pointer-events: none; z-index: 80; overflow: hidden; }
     .confetti { position: absolute; width: 11px; height: 15px; top: 42%; left: 50%; border-radius: 3px; opacity: 0; animation: confetti 1s ease-out forwards; }
@@ -394,6 +402,11 @@
     <div id="result" class="hidden">
       <div id="driveCard" class="card center fade">
         <div class="kicker" id="driveKicker">Mystery drive underway</div>
+        <div id="navBanner" class="nav-banner hidden">
+          <div class="nav-man" id="navMan">↑</div>
+          <div class="nav-txt"><div class="nav-inst" id="navInst">Getting directions…</div><div class="nav-dist" id="navDist"></div></div>
+          <button class="nav-mute" id="navMute" title="Mute voice">🔊</button>
+        </div>
         <div class="distance"><span id="km">0</span><small> km to go</small></div>
         <div class="metarow">
           <div class="meta"><div class="v" id="eta">0 min</div><div class="k" id="etaLabel">est. drive</div></div>
@@ -884,6 +897,7 @@
   function updateProgress(pos) {
     updateDistance(pos); setArrow(pos); setPulse(pos);
     if (umap && umarker) { umarker.setLatLng(pos); umap.panTo(pos, { animate: true }); }
+    if (navMode) { if (pendingNav) { pendingNav = false; startNav(pos); } else updateNav(pos); }
     if (haversine(pos, [chosen.lat, chosen.lng]) <= 0.15) arrive();
   }
   function stopTracking() {
@@ -891,9 +905,112 @@
     if (demoTimer) { clearInterval(demoTimer); demoTimer = null; }
   }
 
+  // ============ Turn-by-turn (prototype: OSRM routing + Web Speech voice) ============
+  // Real voice directions while the destination stays hidden — the route on the map is clipped
+  // to ~1 km ahead so you never see where you're going until you arrive.
+  let navMode = false, pendingNav = false, navOn = false, voiceMuted = false;
+  let steps = [], stepIdx = [], curStep = 1, routeCoords = [], routeLine = null, offCount = 0, announced = {};
+  function nearestIdx(ll) { let ni = 0, best = 1e9; for (let i = 0; i < routeCoords.length; i++) { const d = haversine(ll, routeCoords[i]); if (d < best) { best = d; ni = i; } } return ni; }
+  function routeDist(a, b) { if (b <= a) return 0; let d = 0; for (let i = a + 1; i <= b; i++) d += haversine(routeCoords[i - 1], routeCoords[i]); return d * 1000; }
+  function speak(text) {
+    if (voiceMuted || !window.speechSynthesis) return;
+    try { const u = new SpeechSynthesisUtterance(text); u.rate = 1; window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); } catch (e) {}
+  }
+  function ordinal(n) { return ["", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th"][n] || (n + "th"); }
+  function manIcon(step) {
+    const t = (step.maneuver || {}).type || "", m = (step.maneuver || {}).modifier || "";
+    if (t === "arrive") return "📍";
+    if (t === "roundabout" || t === "rotary") return "⟳";
+    if (m.indexOf("uturn") >= 0) return "↩";
+    if (m === "left") return "←"; if (m === "right") return "→";
+    if (m === "slight left") return "↖"; if (m === "slight right") return "↗";
+    if (m === "sharp left") return "⬅"; if (m === "sharp right") return "➡";
+    return "↑";
+  }
+  function stepText(step) {
+    const m = step.maneuver || {}, mod = m.modifier || "", road = step.name ? (" onto " + step.name) : "";
+    switch (m.type) {
+      case "depart": return "Start off" + (step.name ? (" on " + step.name) : "");
+      case "turn": case "end of road": return "Turn " + mod + road;
+      case "fork": return "Keep " + mod + road;
+      case "merge": return "Merge" + (mod ? (" " + mod) : "") + road;
+      case "on ramp": return "Take the ramp" + (mod ? (" on the " + mod) : "") + road;
+      case "off ramp": return "Take the exit" + (mod ? (" on the " + mod) : "");
+      case "roundabout": case "rotary": return "At the roundabout, take the " + ordinal(m.exit || 1) + " exit" + road;
+      case "new name": return "Continue" + (step.name ? (" on " + step.name) : " straight");
+      case "continue": return "Continue" + (mod ? (" " + mod) : "") + road;
+      case "arrive": return "You've arrived";
+      default: return (mod ? ("Turn " + mod) : "Continue") + road;
+    }
+  }
+  function metresText(m) { return m >= 1000 ? ((m / 1000).toFixed(1) + " km") : (Math.round(m / 10) * 10 + " m"); }
+  function manLatLng(step) { const l = step.maneuver.location; return [l[1], l[0]]; }
+
+  async function startNav(pos) {
+    const dest = [chosen.lat, chosen.lng];
+    const url = "https://router.project-osrm.org/route/v1/driving/" + pos[1] + "," + pos[0] + ";" + dest[1] + "," + dest[0] + "?overview=full&geometries=geojson&steps=true";
+    try {
+      const j = await (await fetch(url)).json();
+      if (!j.routes || !j.routes.length) { navOn = false; document.getElementById("driveMsg").textContent = "No road route found — using the compass instead."; return; }
+      const route = j.routes[0];
+      steps = route.legs[0].steps;
+      curStep = Math.min(1, steps.length - 1); announced = {};
+      routeCoords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+      stepIdx = steps.map(s => nearestIdx(manLatLng(s)));
+      navOn = true; offCount = 0;
+      document.getElementById("navBanner").classList.remove("hidden");
+      drawRouteAhead(pos);
+      const s = steps[curStep];
+      updateNavBanner(s, haversine(pos, manLatLng(s)) * 1000);
+      speak("Starting navigation. " + stepText(s) + ".");
+    } catch (e) {
+      navOn = false;
+      document.getElementById("driveMsg").textContent = "Couldn't load directions — using the compass. Check your connection.";
+    }
+  }
+  function drawRouteAhead(pos) {
+    if (!routeCoords.length || !umap) return;
+    let ni = 0, best = 1e9;
+    for (let i = 0; i < routeCoords.length; i++) { const d = haversine(pos, routeCoords[i]); if (d < best) { best = d; ni = i; } }
+    const out = [routeCoords[ni]]; let acc = 0;
+    for (let i = ni + 1; i < routeCoords.length; i++) { acc += haversine(routeCoords[i - 1], routeCoords[i]); out.push(routeCoords[i]); if (acc > 1.0) break; } // clip ~1km ahead → hides destination
+    if (routeLine) umap.removeLayer(routeLine);
+    routeLine = L.polyline(out, { color: "#0fb894", weight: 6, opacity: .85 }).addTo(umap);
+  }
+  function updateNavBanner(step, distM) {
+    document.getElementById("navMan").textContent = manIcon(step);
+    document.getElementById("navInst").textContent = stepText(step);
+    document.getElementById("navDist").textContent = "in " + metresText(distM);
+  }
+  function updateNav(pos) {
+    if (!navOn || !steps.length) return;
+    const ni = nearestIdx(pos);
+    if (haversine(pos, routeCoords[ni]) > 0.06) { offCount++; if (offCount >= 2) { offCount = 0; speak("Recalculating."); startNav(pos); return; } } else offCount = 0;
+    let cs = 1; while (cs < steps.length - 1 && stepIdx[cs] <= ni) cs++; // first maneuver still ahead
+    curStep = cs;
+    const step = steps[curStep];
+    const dM = routeDist(ni, stepIdx[curStep]); // road distance to the next turn
+    updateNavBanner(step, dM); drawRouteAhead(pos);
+    const k = curStep;
+    if (dM <= 220 && dM > 70 && !announced[k + "_near"]) { announced[k + "_near"] = 1; speak("In " + metresText(dM) + ", " + stepText(step) + "."); }
+    if (dM <= 45 && !announced[k + "_now"]) { announced[k + "_now"] = 1; speak(stepText(step) + "."); }
+  }
+  function stopNav() {
+    navMode = false; navOn = false; pendingNav = false;
+    try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
+    if (routeLine && umap) { umap.removeLayer(routeLine); routeLine = null; }
+    const b = document.getElementById("navBanner"); if (b) b.classList.add("hidden");
+  }
+  document.getElementById("navMute").addEventListener("click", () => {
+    voiceMuted = !voiceMuted;
+    document.getElementById("navMute").textContent = voiceMuted ? "🔇" : "🔊";
+    if (voiceMuted) { try { window.speechSynthesis.cancel(); } catch (e) {} } else speak("Voice on.");
+  });
+
   // ============ Arrival ============
   function arrive() {
     if (arrived) return; arrived = true; stopTracking();
+    const wasNav = navOn; stopNav(); if (wasNav) speak("You have arrived.");
     const newArea = !getVisited().some(x => x.name === chosen.name);
     const beforeTier = tierIndex(getPoints());
     addVisited(chosen);
@@ -1072,9 +1189,12 @@
     const msg = document.getElementById("driveMsg");
     if (!navigator.geolocation) { msg.textContent = "GPS is not available."; return; }
     stopTracking();
+    navMode = true; pendingNav = true; voiceMuted = false;
+    document.getElementById("navMute").textContent = "🔊";
+    speak("Finding your route."); // primes the voice engine on this tap
     msg.innerHTML = state.mode === "walk"
       ? "Watch where you're walking and stay aware of traffic. It reveals when you arrive."
-      : "⚠️ Drive safely — mount your phone, keep your eyes on the road, and don't touch it while moving. WanderLoot isn't responsible for your journey. It reveals when you arrive.";
+      : "⚠️ Drive safely — mount your phone, follow the voice, and keep your eyes on the road. WanderLoot isn't responsible for your journey. It reveals when you arrive.";
     watchId = navigator.geolocation.watchPosition(
       p => updateProgress([p.coords.latitude, p.coords.longitude]),
       () => { msg.textContent = "Could not read GPS. Check location permission."; },
@@ -1082,7 +1202,7 @@
     );
   });
   document.getElementById("demoBtn").addEventListener("click", () => {
-    stopTracking(); arrived = false;
+    stopTracking(); stopNav(); arrived = false;
     document.getElementById("driveMsg").textContent = "Demo drive running. Watch it count down to the reveal.";
     const start = state.start, dest = [chosen.lat, chosen.lng];
     let t = 0; const steps = 60;
@@ -1094,7 +1214,7 @@
   });
 
   // ============ Navigation ============
-  function backHome() { stopTracking(); refreshChrome(); showOnly("setup"); }
+  function backHome() { stopTracking(); stopNav(); refreshChrome(); showOnly("setup"); }
   document.getElementById("again").addEventListener("click", backHome);
   document.getElementById("again2").addEventListener("click", backHome);
   document.getElementById("mapBack").addEventListener("click", backHome);
