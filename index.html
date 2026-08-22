@@ -168,6 +168,10 @@
     .photo-pick:active { transform: scale(0.97); }
     .photo-badge { position: absolute; right: 2px; bottom: 2px; width: 30px; height: 30px; border-radius: 50%; background: var(--panel); border: 2px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 15px; box-shadow: 0 2px 8px rgba(20,40,60,0.16); }
     .photo-hint { text-align: center; color: var(--muted); font-size: 13px; font-weight: 600; margin-top: 2px; }
+    .agree { display: flex; gap: 10px; align-items: flex-start; margin: 16px 2px 0; font-size: 12.5px; color: var(--muted); font-weight: 600; line-height: 1.45; cursor: pointer; }
+    .agree input { margin-top: 2px; width: 18px; height: 18px; flex: 0 0 18px; accent-color: var(--teal); }
+    .agree a { color: var(--teal-deep); font-weight: 800; text-decoration: underline; }
+    .btn[disabled] { opacity: 0.55; }
     .av-big, .av-face { overflow: hidden; background-repeat: no-repeat; background-position: center; background-size: cover; }
 
     /* Passport */
@@ -237,7 +241,8 @@
           <div class="photo-hint" id="photoHint">Tap to add a photo</div>
         </div>
         <input class="name" id="avNameInput" maxlength="18" placeholder="Your name" />
-        <button class="btn" id="saveAvatar" style="margin-top:18px;">Start exploring</button>
+        <label class="agree"><input type="checkbox" id="agreeChk"><span>I'll travel safely, follow all road and pedestrian rules, and never use the app while driving. I accept the <a id="termsLink">Terms</a> and understand Wanderloot is not responsible for my journey or anything that happens along the way.</span></label>
+        <button class="btn" id="saveAvatar">Start exploring</button>
       </div>
     </div>
 
@@ -611,6 +616,7 @@
     draft = p ? { name: p.name || "", photo: p.photo || null } : { name: "", photo: null };
     document.getElementById("avNameInput").value = draft.name || "";
     document.getElementById("photoHint").textContent = draft.photo ? "Tap to change photo" : "Tap to add a photo";
+    document.getElementById("agreeChk").checked = LS.get("md_agreed", false);
     paintAvatar(document.getElementById("avBig"), draft);
     showOnly("onboard");
   }
@@ -619,12 +625,15 @@
     if (!draft.photo) paintAvatar(document.getElementById("avBig"), draft);
   });
   document.getElementById("saveAvatar").addEventListener("click", () => {
+    if (!document.getElementById("agreeChk").checked) { toast("Please accept the safety terms to continue"); return; }
     draft.name = (document.getElementById("avNameInput").value || "Explorer").trim() || "Explorer";
     LS.set("md_profile", { name: draft.name, photo: draft.photo || null });
+    LS.set("md_agreed", true);
     refreshChrome();
     showOnly("setup");
     toast("Welcome, " + draft.name + "!");
   });
+  document.getElementById("termsLink").addEventListener("click", e => { e.preventDefault(); toast("Full Terms & safety policy: wanderloot.com.au/terms"); });
   document.getElementById("avatarChip").addEventListener("click", openOnboard);
 
   // ============ Chrome (avatar chip + tier + nav) ============
@@ -868,7 +877,9 @@
     const msg = document.getElementById("driveMsg");
     if (!navigator.geolocation) { msg.textContent = "GPS is not available."; return; }
     stopTracking();
-    msg.textContent = "You're off. Follow the arrow. It reveals when you arrive.";
+    msg.innerHTML = state.mode === "walk"
+      ? "Watch where you're walking and stay aware of traffic. It reveals when you arrive."
+      : "⚠️ Drive safely — mount your phone, keep your eyes on the road, and don't touch it while moving. Wanderloot isn't responsible for your journey. It reveals when you arrive.";
     watchId = navigator.geolocation.watchPosition(
       p => updateProgress([p.coords.latitude, p.coords.longitude]),
       () => { msg.textContent = "Could not read GPS. Check location permission."; },
