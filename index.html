@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Wanderloot</title>
+  <title>WanderLoot</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -220,7 +220,7 @@
   <div id="burst"></div>
   <div class="wrap">
     <div class="topbar">
-      <div class="logo">Wander<span>loot</span></div>
+      <div class="logo">Wander<span>Loot</span></div>
       <div class="avatar-chip hidden" id="avatarChip">
         <div class="av-face" id="chipFace">🦊</div>
         <div class="av-meta"><div class="av-name" id="chipName">Explorer</div><div class="av-tier" id="chipTier">Rookie</div></div>
@@ -241,7 +241,7 @@
           <div class="photo-hint" id="photoHint">Tap to add a photo</div>
         </div>
         <input class="name" id="avNameInput" maxlength="18" placeholder="Your name" />
-        <label class="agree"><input type="checkbox" id="agreeChk"><span>I'll use Wanderloot safely and hands-free while driving — phone mounted, set up before I set off, guided by voice, eyes on the road, no tapping while moving — and follow all road and pedestrian rules. I accept the <a id="termsLink">Terms</a> and understand Wanderloot is not responsible for my journey or anything that happens along the way.</span></label>
+        <label class="agree"><input type="checkbox" id="agreeChk"><span>I'll use WanderLoot safely and hands-free while driving — phone mounted, set up before I set off, guided by voice, eyes on the road, no tapping while moving — and follow all road and pedestrian rules. I accept the <a id="termsLink">Terms</a> and understand WanderLoot is not responsible for my journey or anything that happens along the way.</span></label>
         <button class="btn" id="saveAvatar">Start exploring</button>
       </div>
     </div>
@@ -379,7 +379,7 @@
     <!-- VENUES -->
     <div id="venues" class="hidden">
       <div class="card venues fade">
-        <div class="vp-h">Wanderloot for venues</div>
+        <div class="vp-h">WanderLoot for venues</div>
         <p style="color:var(--muted);font-size:14px;font-weight:600;">Fill quiet nights with customers who did not plan to come. You supply an offer you would spend on marketing anyway.</p>
         <ul>
           <li>You only pay when a customer actually redeems. No upfront risk to get started.</li>
@@ -476,6 +476,12 @@
     { name: "Glenelg Beach & Jetty", lat: -34.9800, lng: 138.5140, cat: "beach", budget: 0, hint: "A tram ride to a jetty, sand and gelato." },
     { name: "Cleland Wildlife Park", lat: -34.9660, lng: 138.6960, cat: "entertainment", budget: 2, hint: "Walk among kangaroos and hold a koala." }
   ];
+
+  // Partners set "Active" in the WanderLoot ops dashboard (same browser/origin) go live here automatically.
+  try {
+    const live = JSON.parse(localStorage.getItem("wl_live_partners") || "[]");
+    if (Array.isArray(live)) live.forEach(v => { if (v && v.name && v.lat != null && !PLACES.some(p => p.name === v.name)) PLACES.push(v); });
+  } catch (e) {}
 
   const catName = { surprise:"Surprise", nature:"Nature", sightsee:"Sightsee", eat:"Eat & drink", entertainment:"Do stuff", beach:"Beach", nightlife:"Nightlife" };
   const catEmoji = { surprise:"🎲", nature:"🌿", sightsee:"📸", eat:"🍽️", entertainment:"🎡", beach:"🏖️", nightlife:"🍸" };
@@ -879,7 +885,7 @@
     stopTracking();
     msg.innerHTML = state.mode === "walk"
       ? "Watch where you're walking and stay aware of traffic. It reveals when you arrive."
-      : "⚠️ Drive safely — mount your phone, keep your eyes on the road, and don't touch it while moving. Wanderloot isn't responsible for your journey. It reveals when you arrive.";
+      : "⚠️ Drive safely — mount your phone, keep your eyes on the road, and don't touch it while moving. WanderLoot isn't responsible for your journey. It reveals when you arrive.";
     watchId = navigator.geolocation.watchPosition(
       p => updateProgress([p.coords.latitude, p.coords.longitude]),
       () => { msg.textContent = "Could not read GPS. Check location permission."; },

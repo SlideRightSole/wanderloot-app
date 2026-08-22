@@ -1,0 +1,369 @@
+<title>WanderLoot Ops</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eef2f3; --panel:#ffffff; --panel-2:#f5f8f8; --ink:#0f2329; --muted:#647882; --line:#e0e8e8;
+    --teal:#0fb894; --teal-deep:#0a7d67; --gold:#e0a01c; --coral:#f2603e; --sky:#3aa0ff; --violet:#7b6cf6; --pink:#ff5fa2;
+    --good:#12b886; --warn:#e0a01c; --crit:#f2603e;
+    --shadow:0 1px 2px rgba(20,40,60,.04), 0 12px 30px rgba(20,40,60,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg); color:var(--ink); font-family:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-weight:500; -webkit-font-smoothing:antialiased; line-height:1.45}
+  .f{font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif}
+  .num{font-family:"Bricolage Grotesque"; font-variant-numeric:tabular-nums}
+  button{font-family:inherit; cursor:pointer}
+  :focus-visible{outline:2px solid var(--teal); outline-offset:2px; border-radius:6px}
+
+  /* top bar */
+  .topbar{background:var(--panel); border-bottom:1px solid var(--line); padding:0 22px; display:flex; align-items:center; justify-content:space-between; height:60px; position:sticky; top:0; z-index:20}
+  .brand{font-family:"Bricolage Grotesque"; font-weight:800; font-size:21px; letter-spacing:-.01em}
+  .brand span{color:var(--teal)}
+  .brand .tag{font-family:"Plus Jakarta Sans"; font-size:11px; font-weight:700; color:var(--muted); border:1px solid var(--line); border-radius:20px; padding:3px 9px; margin-left:8px; text-transform:uppercase; letter-spacing:.05em}
+  .tabs{display:flex; gap:4px}
+  .tab{border:none; background:none; padding:9px 15px; border-radius:10px; font-weight:700; font-size:14px; color:var(--muted)}
+  .tab.on{background:var(--panel-2); color:var(--teal-deep)}
+  .tab:hover{color:var(--ink)}
+
+  .wrap{max-width:1160px; margin:0 auto; padding:22px 22px 60px}
+  h2.sec{font-family:"Bricolage Grotesque"; font-size:20px; font-weight:800; margin:6px 0 14px}
+  .row-head{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px}
+
+  /* KPI tiles */
+  .livebar{background:linear-gradient(135deg, rgba(15,184,148,.1), rgba(224,160,28,.08)); border:1px solid var(--line); border-radius:14px; padding:12px 16px; margin-bottom:16px; font-weight:700; font-size:14px; color:var(--ink)}
+  .livebar b{color:var(--teal-deep)}
+  .kpis{display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:18px}
+  .kpi{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:15px 16px; box-shadow:var(--shadow)}
+  .kpi .k{font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+  .kpi .v{font-size:30px; font-weight:800; margin-top:6px; line-height:1}
+  .kpi .s{font-size:12px; color:var(--muted); font-weight:600; margin-top:5px}
+  .kpi.hero{background:linear-gradient(135deg,var(--teal-deep),#0c9c7f); color:#eafff8; border:none}
+  .kpi.hero .k{color:#bfeee0} .kpi.hero .v{color:#fff} .kpi.hero .s{color:#cdf3ea}
+  .kpi.gold .v{color:var(--gold)}
+
+  .grid2{display:grid; grid-template-columns:1.3fr 1fr; gap:16px; margin-bottom:16px}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px; box-shadow:var(--shadow)}
+  .card h3{font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:14px}
+
+  /* bar chart */
+  .bar-row{display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:13px; font-weight:600}
+  .bar-row .lab{width:96px; color:var(--ink)}
+  .bar-row .track{flex:1; height:12px; background:var(--panel-2); border-radius:99px; overflow:hidden}
+  .bar-row .track i{display:block; height:100%; border-radius:99px}
+  .bar-row .n{width:26px; text-align:right; color:var(--muted); font-weight:700}
+
+  /* funnel */
+  .funnel{display:flex; flex-direction:column; gap:8px}
+  .fstage{display:flex; align-items:center; gap:12px}
+  .fstage .fbar{height:34px; border-radius:9px; display:flex; align-items:center; padding:0 12px; color:#fff; font-weight:800; font-size:14px; min-width:44px}
+  .fstage .flab{font-size:13px; font-weight:700; color:var(--ink)}
+  .fstage .fsub{font-size:12px; color:var(--muted); font-weight:600}
+
+  /* attention list */
+  .att{display:flex; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); align-items:flex-start}
+  .att:last-child{border:none}
+  .att .dot{width:9px;height:9px;border-radius:50%;margin-top:5px;flex:0 0 9px}
+  .att b{font-size:14px} .att p{font-size:12.5px; color:var(--muted)}
+
+  /* table */
+  .toolbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px}
+  .toolbar input, .toolbar select{border:1px solid var(--line); border-radius:10px; padding:9px 12px; font-family:inherit; font-size:13px; font-weight:600; background:var(--panel); color:var(--ink)}
+  .toolbar input{min-width:200px}
+  .btn{border:none; border-radius:11px; padding:10px 16px; font-weight:800; font-size:14px; color:#fff; background:linear-gradient(135deg,var(--teal),#0bb3c9); box-shadow:0 6px 16px rgba(15,184,148,.28)}
+  .btn.ghost{background:var(--panel); color:var(--ink); border:1px solid var(--line); box-shadow:none}
+  .btn.sm{padding:6px 11px; font-size:12.5px}
+  .tablewrap{background:var(--panel); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); overflow-x:auto}
+  table{width:100%; border-collapse:collapse; min-width:820px}
+  th{font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); text-align:left; padding:12px 14px; border-bottom:1px solid var(--line); font-weight:800; background:var(--panel-2)}
+  td{padding:11px 14px; border-bottom:1px solid var(--line); font-size:13.5px; font-weight:600; vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:var(--panel-2)}
+  .vname{font-weight:800} .vsub{font-size:12px; color:var(--muted); font-weight:600}
+  .pill{display:inline-block; font-size:11.5px; font-weight:800; padding:4px 10px; border-radius:20px; letter-spacing:.02em}
+  .prog{display:flex; align-items:center; gap:8px; font-weight:800; font-size:13px}
+  .prog .pt{width:70px; height:8px; background:var(--panel-2); border-radius:99px; overflow:hidden}
+  .prog .pt i{display:block; height:100%; background:var(--gold); border-radius:99px}
+  .billy{color:var(--good); font-weight:800; font-size:12px}
+  .statusSel{border:1px solid var(--line); border-radius:8px; padding:5px 8px; font-size:12px; font-weight:700; background:var(--panel); color:var(--ink)}
+
+  /* pipeline columns */
+  .pipe{display:grid; grid-template-columns:repeat(6,1fr); gap:12px}
+  .col{background:var(--panel-2); border:1px solid var(--line); border-radius:14px; padding:10px; min-height:120px}
+  .col h4{font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center}
+  .col h4 .c{background:var(--panel); border-radius:20px; padding:1px 8px; font-size:12px; color:var(--muted)}
+  .vcard{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:9px 10px; margin-bottom:8px; font-size:12.5px}
+  .vcard b{font-size:13px} .vcard .m{color:var(--muted); font-size:11.5px}
+
+  /* modal */
+  .modal{position:fixed; inset:0; background:rgba(15,35,41,.5); display:none; align-items:center; justify-content:center; z-index:50; padding:18px}
+  .modal.on{display:flex}
+  .sheet{background:var(--panel); border-radius:18px; width:100%; max-width:460px; padding:22px; box-shadow:0 30px 60px rgba(0,0,0,.3); max-height:92vh; overflow-y:auto}
+  .sheet h3{font-family:"Bricolage Grotesque"; font-size:19px; font-weight:800; margin-bottom:14px}
+  .fld{margin-bottom:12px}
+  .fld label{font-size:12px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.04em}
+  .fld input, .fld select{width:100%; margin-top:5px; border:1px solid var(--line); border-radius:10px; padding:11px; font-family:inherit; font-size:14px; font-weight:600; background:var(--panel-2); color:var(--ink)}
+  .fld input:focus, .fld select:focus{outline:none; border-color:var(--teal)}
+  .fld-row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .modal-actions{display:flex; gap:10px; margin-top:8px}
+  .modal-actions .btn{flex:1; justify-content:center; text-align:center}
+
+  #toast{position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px); background:#0f2329; color:#fff; padding:12px 20px; border-radius:99px; font-weight:800; box-shadow:0 12px 30px rgba(0,0,0,.35); opacity:0; pointer-events:none; transition:all .3s cubic-bezier(.22,1.4,.4,1); z-index:60}
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+  @media(max-width:1000px){ .kpis{grid-template-columns:repeat(3,1fr)} .grid2{grid-template-columns:1fr} .pipe{grid-template-columns:repeat(3,1fr)} }
+  @media(max-width:560px){ .kpis{grid-template-columns:repeat(2,1fr)} .pipe{grid-template-columns:1fr} .tabs .tab{padding:8px 10px} }
+</style>
+
+<div class="topbar">
+  <div class="brand f">Wander<span>Loot</span> <span class="tag">Ops</span></div>
+  <div class="tabs">
+    <button class="tab on" data-tab="overview">Overview</button>
+    <button class="tab" data-tab="partners">Partners</button>
+    <button class="tab" data-tab="pipeline">Pipeline</button>
+  </div>
+</div>
+
+<div class="wrap" id="view"></div>
+
+<!-- Add / edit business modal -->
+<div class="modal" id="modal">
+  <div class="sheet">
+    <h3 id="modalTitle">Add a business</h3>
+    <div class="fld"><label>Business name</label><input id="mName" placeholder="e.g. Broadbeach Woodfired Kitchen"></div>
+    <div class="fld-row">
+      <div class="fld"><label>Sector</label><select id="mSector"></select></div>
+      <div class="fld"><label>Suburb</label><input id="mSuburb" placeholder="Broadbeach"></div>
+    </div>
+    <div class="fld-row">
+      <div class="fld"><label>Phone</label><input id="mPhone" placeholder="(07) ..."></div>
+      <div class="fld"><label>Status</label><select id="mStatus"></select></div>
+    </div>
+    <div class="fld"><label>Offer (voucher)</label><input id="mOffer" placeholder="Free garlic pizza with any two mains"></div>
+    <div class="fld-row">
+      <div class="fld"><label>Est. value ($)</label><input id="mValue" type="number" placeholder="30"></div>
+      <div class="fld"><label>Source</label><select id="mSource"></select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="mCancel">Cancel</button>
+      <button class="btn" id="mSave">Save business</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const STATUS = [
+    {k:"lead",       label:"Lead",       color:"#8a97a0"},
+    {k:"contacted",  label:"Contacted",  color:"#3aa0ff"},
+    {k:"interested", label:"Interested", color:"#e0a01c"},
+    {k:"meeting",    label:"Meeting",    color:"#7b6cf6"},
+    {k:"signed",     label:"Signed",     color:"#0fb894"},
+    {k:"active",     label:"Active",     color:"#12b886"},
+  ];
+  const SECTORS = [
+    {k:"eat",label:"Restaurant",color:"#f2603e"},
+    {k:"cafe",label:"Cafe",color:"#e0a01c"},
+    {k:"nightlife",label:"Bar / Pub",color:"#7b6cf6"},
+    {k:"activity",label:"Activity",color:"#3aa0ff"},
+    {k:"attraction",label:"Attraction",color:"#0fb894"},
+  ];
+  const SOURCES = ["Direct","EatClub","Groupon","Referral","Walk-in"];
+  const BILL_AT = 5, FEE = 29;
+  // Suburb centroids so any lead can be placed on the customer map.
+  const SUBURB_COORDS = {
+    "Surfers Paradise":[-28.0027,153.4309],"Broadbeach":[-28.0300,153.4310],"Broadbeach Waters":[-28.0380,153.4200],
+    "Mermaid Beach":[-28.0450,153.4400],"Nobby Beach":[-28.0560,153.4400],"Miami":[-28.0700,153.4420],
+    "Burleigh Heads":[-28.0900,153.4590],"Burleigh Waters":[-28.0960,153.4300],"Palm Beach":[-28.1150,153.4650],
+    "Currumbin":[-28.1330,153.4840],"Nerang":[-27.9900,153.3400],"Southport":[-27.9670,153.4150],
+    "Main Beach":[-27.9770,153.4260],"Coolangatta":[-28.1690,153.5350],"Robina":[-28.0770,153.3930],
+    "Bundall":[-28.0080,153.4020],"Benowa":[-28.0130,153.3830]
+  };
+  const coordsFor = s => SUBURB_COORDS[s] ? {lat:SUBURB_COORDS[s][0], lng:SUBURB_COORDS[s][1]} : null;
+  const sCfg = k => STATUS.find(s=>s.k===k) || STATUS[0];
+  const secCfg = k => SECTORS.find(s=>s.k===k) || SECTORS[0];
+
+  const SEED = [
+    {name:"Broadbeach Woodfired Kitchen",sector:"eat",suburb:"Broadbeach",phone:"(07) 5570 1234",offer:"Free garlic pizza & 2 drinks w/ 2 mains",value:32,status:"active",redemptions:7,source:"Direct"},
+    {name:"Miami Marketta",sector:"eat",suburb:"Miami",phone:"(07) 5619 8888",offer:"$10 street-food voucher",value:10,status:"active",redemptions:6,source:"Groupon"},
+    {name:"Zone Bowling Surfers",sector:"activity",suburb:"Surfers Paradise",phone:"(07) 4058 8645",offer:"2 games for the price of 1",value:20,status:"active",redemptions:5,source:"Groupon"},
+    {name:"Putt Planet Mini Golf",sector:"activity",suburb:"Nerang",phone:"(07) 5578 2020",offer:"Two-for-one rounds",value:24,status:"signed",redemptions:4,source:"Direct"},
+    {name:"Longboards Laidback Eatery",sector:"eat",suburb:"Surfers Paradise",phone:"(07) 5538 7777",offer:"Free entree with any main",value:18,status:"signed",redemptions:3,source:"EatClub"},
+    {name:"Miami Public House",sector:"nightlife",suburb:"Miami",phone:"(07) 5535 4141",offer:"Two-for-one house pints",value:14,status:"signed",redemptions:2,source:"Direct"},
+    {name:"The Lane Espresso",sector:"cafe",suburb:"Mermaid Beach",phone:"(07) 5572 3311",offer:"Free pastry with any coffee",value:8,status:"signed",redemptions:1,source:"Direct"},
+    {name:"The Sandbar Rooftop",sector:"nightlife",suburb:"Surfers Paradise",phone:"(07) 5526 9090",offer:"Free welcome cocktail",value:20,status:"meeting",redemptions:0,source:"EatClub"},
+    {name:"Locali Pizzeria",sector:"eat",suburb:"Mermaid Beach",phone:"0469 265 587",offer:"$19 dining credit",value:19,status:"interested",redemptions:0,source:"Groupon"},
+    {name:"Mr Hizola's",sector:"eat",suburb:"Burleigh Heads",phone:"(07) 5576 3458",offer:"Cantonese banquet deal",value:29,status:"interested",redemptions:0,source:"Groupon"},
+    {name:"Surfers Ramen House",sector:"eat",suburb:"Surfers Paradise",phone:"(07) 5570 4545",offer:"Free gyoza with any ramen",value:12,status:"contacted",redemptions:0,source:"EatClub"},
+    {name:"Currumbin Beach Grill",sector:"eat",suburb:"Currumbin",phone:"(07) 5598 2211",offer:"Free garlic bread + drink",value:18,status:"contacted",redemptions:0,source:"Direct"},
+    {name:"Manny's Wine & Fish House",sector:"eat",suburb:"Burleigh Heads",phone:"0435 864 044",offer:"Seafood banquet deal",value:40,status:"lead",redemptions:0,source:"Groupon"},
+    {name:"Pancake Diner Burleigh",sector:"cafe",suburb:"Burleigh Heads",phone:"(07) 5620 2555",offer:"$25 diner meal",value:25,status:"lead",redemptions:0,source:"Groupon"},
+    {name:"Timezone Surfers",sector:"activity",suburb:"Surfers Paradise",phone:"(07) 3050 0793",offer:"$50 Powercard for $30",value:20,status:"lead",redemptions:0,source:"Groupon"},
+    {name:"Skyline Ropes Adventure",sector:"activity",suburb:"Nerang",phone:"(07) 5596 1010",offer:"Free harness hire",value:22,status:"lead",redemptions:0,source:"Direct"},
+    {name:"Currumbin Wildlife Sanctuary",sector:"attraction",suburb:"Currumbin",phone:"(07) 5534 1266",offer:"Kids-go-free voucher",value:35,status:"lead",redemptions:0,source:"Direct"},
+  ];
+
+  function load(){
+    let data;
+    try{ const d=JSON.parse(localStorage.getItem("wl_ops_partners")); if(d&&d.length) data=d; }catch(e){}
+    if(!data) data = SEED.map((p,i)=>({id:i+1,...p}));
+    data.forEach(p=>{ if(p.lat==null){ const c=coordsFor(p.suburb); if(c){ p.lat=c.lat; p.lng=c.lng; } } });
+    return data;
+  }
+  // Active partners with coordinates become live mystery destinations in the customer app (shared storage, same origin).
+  const CATMAP = {eat:"eat", cafe:"eat", nightlife:"nightlife", activity:"entertainment", attraction:"sightsee"};
+  function save(){
+    localStorage.setItem("wl_ops_partners", JSON.stringify(partners));
+    const live = partners.filter(p=>p.status==="active" && p.lat!=null).map(p=>({
+      name:p.name, lat:p.lat, lng:p.lng, cat:CATMAP[p.sector]||"eat",
+      budget: p.value>60?3:p.value>30?2:1, tier:"priority", offer:p.offer, value:p.value,
+      closes:"9:00pm", adult:p.sector==="nightlife", hint:"A WanderLoot partner in "+p.suburb+".", live:true
+    }));
+    localStorage.setItem("wl_live_partners", JSON.stringify(live));
+  }
+  let partners = load();
+  let tab = "overview", filterStatus="all", filterSector="all", search="";
+  let editId = null;
+
+  function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2400); }
+  const billing = p => p.redemptions >= BILL_AT;
+
+  // ---------- Overview ----------
+  function renderOverview(){
+    const signed = partners.filter(p=>p.status==="signed"||p.status==="active");
+    const active = partners.filter(p=>p.status==="active");
+    const billingCount = partners.filter(billing).length;
+    const totalRedemptions = partners.reduce((a,p)=>a+p.redemptions,0);
+    const pipelineCount = partners.filter(p=>["lead","contacted","interested","meeting"].includes(p.status)).length;
+    const mrr = billingCount * FEE;
+    const nearBill = partners.filter(p=>!billing(p) && p.redemptions>0 && p.redemptions>=BILL_AT-1);
+
+    const kpi = (k,v,s,cls="")=>`<div class="kpi ${cls}"><div class="k">${k}</div><div class="v num">${v}</div><div class="s">${s}</div></div>`;
+    const liveNow = partners.filter(p=>p.status==="active" && p.lat!=null).length;
+    let html = `<div class="livebar">🗺️ <b class="num">${liveNow}</b> partners are live on the customer map right now — set any partner to <b>Active</b> and they appear in the app instantly.</div><div class="kpis">
+      ${kpi("Signed partners", signed.length, active.length+" live &amp; delivering")}
+      ${kpi("Billing", billingCount, "past "+BILL_AT+" redemptions","gold")}
+      ${kpi("Monthly revenue", "$"+mrr, billingCount+" &times; $"+FEE,"hero")}
+      ${kpi("Redemptions", totalRedemptions, "customers delivered")}
+      ${kpi("In pipeline", pipelineCount, "leads &rarr; meetings")}
+      ${kpi("Total on file", partners.length, "across "+new Set(partners.map(p=>p.suburb)).size+" suburbs")}
+    </div>`;
+
+    // funnel
+    const counts = STATUS.map(s=>({...s, n:partners.filter(p=>p.status===s.k).length}));
+    const max = Math.max(1,...counts.map(c=>c.n));
+    html += `<div class="grid2">
+      <div class="card"><h3>Outreach funnel</h3><div class="funnel">${
+        counts.map(c=>`<div class="fstage">
+          <div class="fbar" style="background:${c.color}; width:${28+c.n/max*62}%">${c.n}</div>
+          <div><div class="flab">${c.label}</div></div>
+        </div>`).join("")
+      }</div></div>`;
+
+    // sector chart
+    const bySec = SECTORS.map(s=>({...s, n:partners.filter(p=>p.sector===s.k).length}));
+    const smax = Math.max(1,...bySec.map(s=>s.n));
+    html += `<div class="card"><h3>Partners by sector</h3>${
+      bySec.map(s=>`<div class="bar-row"><div class="lab">${s.label}</div><div class="track"><i style="width:${s.n/smax*100}%; background:${s.color}"></i></div><div class="n num">${s.n}</div></div>`).join("")
+    }</div></div>`;
+
+    // needs attention
+    html += `<div class="card"><h3>Needs attention</h3>`;
+    const items = [];
+    nearBill.forEach(p=>items.push({c:"var(--good)", b:p.name+" is 1 redemption from billing", p:p.redemptions+"/"+BILL_AT+" &mdash; one more customer and $"+FEE+"/mo starts."}));
+    partners.filter(p=>p.status==="meeting").forEach(p=>items.push({c:"var(--violet)", b:p.name+" &mdash; meeting booked", p:"Close it. "+secCfg(p.sector).label+", "+p.suburb+"."}));
+    partners.filter(p=>p.status==="interested").forEach(p=>items.push({c:"var(--gold)", b:p.name+" is interested", p:"Follow up while it's warm. "+p.phone}));
+    if(!items.length) items.push({c:"var(--muted)", b:"All quiet", p:"No urgent follow-ups right now."});
+    html += items.slice(0,6).map(i=>`<div class="att"><span class="dot" style="background:${i.c}"></span><div><b>${i.b}</b><p>${i.p}</p></div></div>`).join("")+`</div>`;
+
+    return html;
+  }
+
+  // ---------- Partners table ----------
+  function renderPartners(){
+    let rows = partners.filter(p=>
+      (filterStatus==="all"||p.status===filterStatus) &&
+      (filterSector==="all"||p.sector===filterSector) &&
+      (!search || (p.name+p.suburb).toLowerCase().includes(search.toLowerCase()))
+    );
+    let html = `<div class="row-head"><h2 class="sec">Partners <span style="color:var(--muted);font-weight:600;font-size:15px">(${rows.length})</span></h2>
+      <button class="btn" onclick="openAdd()">+ Add business</button></div>`;
+    html += `<div class="toolbar">
+      <input id="search" placeholder="Search name or suburb…" value="${search}">
+      <select id="fStatus"><option value="all">All statuses</option>${STATUS.map(s=>`<option value="${s.k}" ${filterStatus===s.k?"selected":""}>${s.label}</option>`).join("")}</select>
+      <select id="fSector"><option value="all">All sectors</option>${SECTORS.map(s=>`<option value="${s.k}" ${filterSector===s.k?"selected":""}>${s.label}</option>`).join("")}</select>
+    </div>`;
+    html += `<div class="tablewrap"><table><thead><tr>
+      <th>Business</th><th>Sector</th><th>Offer</th><th>Status</th><th>To billing</th><th>Contact</th><th></th>
+    </tr></thead><tbody>`;
+    rows.forEach(p=>{
+      const sc=sCfg(p.status), b=billing(p);
+      html += `<tr>
+        <td><div class="vname">${p.name}</div><div class="vsub">${p.suburb}</div></td>
+        <td><span class="pill" style="background:${secCfg(p.sector).color}18; color:${secCfg(p.sector).color}">${secCfg(p.sector).label}</span></td>
+        <td style="max-width:220px">${p.offer}<div class="vsub">~$${p.value} · ${p.source}</div></td>
+        <td><select class="statusSel" onchange="setStatus(${p.id}, this.value)">${STATUS.map(s=>`<option value="${s.k}" ${p.status===s.k?"selected":""}>${s.label}</option>`).join("")}</select></td>
+        <td>${ b ? `<span class="billy">Billing · $${FEE}/mo</span>` : `<div class="prog"><span class="num">${p.redemptions}/${BILL_AT}</span><span class="pt"><i style="width:${p.redemptions/BILL_AT*100}%"></i></span></div>` }</td>
+        <td class="vsub">${p.phone}</td>
+        <td><button class="btn ghost sm" onclick="addRedemption(${p.id})">+ Redemption</button></td>
+      </tr>`;
+    });
+    if(!rows.length) html += `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px">No businesses match. <a href="#" onclick="openAdd();return false" style="color:var(--teal-deep);font-weight:800">Add one</a>.</td></tr>`;
+    html += `</tbody></table></div>`;
+    return html;
+  }
+
+  // ---------- Pipeline ----------
+  function renderPipeline(){
+    let html = `<h2 class="sec">Pipeline</h2><div class="pipe">`;
+    STATUS.forEach(s=>{
+      const list = partners.filter(p=>p.status===s.k);
+      html += `<div class="col"><h4 style="color:${s.color}">${s.label}<span class="c num">${list.length}</span></h4>${
+        list.map(p=>`<div class="vcard"><b>${p.name}</b><div class="m">${secCfg(p.sector).label} · ${p.suburb}</div>${p.redemptions>0?`<div class="m num">${p.redemptions}/${BILL_AT} redemptions</div>`:""}</div>`).join("") || `<div class="m" style="color:var(--muted);font-size:12px;padding:4px">Empty</div>`
+      }</div>`;
+    });
+    html += `</div>`;
+    return html;
+  }
+
+  // ---------- Actions ----------
+  window.setStatus = (id,val)=>{ const p=partners.find(x=>x.id===id); if(p){p.status=val; save(); render(); toast(p.name+" → "+sCfg(val).label);} };
+  window.addRedemption = (id)=>{ const p=partners.find(x=>x.id===id); if(p){ p.redemptions++; if(p.status!=="active"&&(p.status==="signed"))p.status="active"; if(p.redemptions===BILL_AT){toast(p.name+" hit "+BILL_AT+" — billing now $"+FEE+"/mo! ");} else {toast(p.name+": "+p.redemptions+"/"+BILL_AT+" redemptions");} save(); render(); } };
+
+  window.openAdd = ()=>{ editId=null; document.getElementById("modalTitle").textContent="Add a business";
+    document.getElementById("mName").value=""; document.getElementById("mSuburb").value=""; document.getElementById("mPhone").value="";
+    document.getElementById("mOffer").value=""; document.getElementById("mValue").value="";
+    document.getElementById("mSector").value=SECTORS[0].k; document.getElementById("mStatus").value="lead"; document.getElementById("mSource").value=SOURCES[0];
+    document.getElementById("modal").classList.add("on"); };
+  document.getElementById("mCancel").onclick=()=>document.getElementById("modal").classList.remove("on");
+  document.getElementById("modal").addEventListener("click",e=>{ if(e.target.id==="modal") e.target.classList.remove("on"); });
+  document.getElementById("mSave").onclick=()=>{
+    const name=document.getElementById("mName").value.trim();
+    if(!name){ toast("Give the business a name"); return; }
+    const rec={ id:Math.max(0,...partners.map(p=>p.id))+1, name,
+      sector:document.getElementById("mSector").value, suburb:document.getElementById("mSuburb").value.trim()||"—",
+      phone:document.getElementById("mPhone").value.trim()||"—", status:document.getElementById("mStatus").value,
+      offer:document.getElementById("mOffer").value.trim()||"—", value:+document.getElementById("mValue").value||0,
+      source:document.getElementById("mSource").value, redemptions:0 };
+    partners.unshift(rec); save(); document.getElementById("modal").classList.remove("on"); render(); toast(name+" added");
+  };
+
+  // ---------- Boot ----------
+  function fillSelect(id,arr,valKey,labKey){ document.getElementById(id).innerHTML = arr.map(o=>`<option value="${valKey?o[valKey]:o}">${labKey?o[labKey]:o}</option>`).join(""); }
+  fillSelect("mSector",SECTORS,"k","label"); fillSelect("mStatus",STATUS,"k","label"); fillSelect("mSource",SOURCES);
+
+  function render(){
+    document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.tab===tab));
+    const v=document.getElementById("view");
+    v.innerHTML = tab==="overview"?renderOverview() : tab==="partners"?renderPartners() : renderPipeline();
+    if(tab==="partners"){
+      document.getElementById("search").oninput=e=>{ search=e.target.value; const p=e.target.selectionStart; render(); const s=document.getElementById("search"); s.focus(); s.setSelectionRange(p,p); };
+      document.getElementById("fStatus").onchange=e=>{ filterStatus=e.target.value; render(); };
+      document.getElementById("fSector").onchange=e=>{ filterSector=e.target.value; render(); };
+    }
+  }
+  document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{ tab=t.dataset.tab; render(); });
+  save(); render();
+</script>
