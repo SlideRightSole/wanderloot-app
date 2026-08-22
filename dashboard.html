@@ -183,7 +183,7 @@
   const PLANS = [
     { k:"starter",  label:"Starter",  fee:97,  target:5,  color:"#8a97a0" },
     { k:"growth",   label:"Growth",   fee:199, target:12, color:"#e0a01c" },
-    { k:"featured", label:"Featured", fee:399, target:25, color:"#0fb894" }
+    { k:"featured", label:"Featured", fee:299, target:25, color:"#0fb894" }
   ];
   const planOf = p => PLANS.find(x => x.k === (p.plan || "starter")) || PLANS[0];
   function earnedFee(p){ let f = 0; for (const pl of PLANS) if ((p.redemptions || 0) >= pl.target) f = Math.max(f, pl.fee); return f; } // highest tier the volume cleared
