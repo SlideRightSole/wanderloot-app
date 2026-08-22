@@ -186,6 +186,69 @@
   const secCfg = k => SECTORS.find(s=>s.k===k) || SECTORS[0];
 
   const SEED = [
+    {"name": "Amin's Kitchen", "sector": "eat", "suburb": "Surfers Paradise", "phone": "(07) 5592 6457", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Amore by the Burleigh Cafe", "sector": "cafe", "suburb": "Burleigh Heads", "phone": "(07) 5593 4000", "offer": "", "value": 0, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Angelo's Crush Italian Pizzeria", "sector": "eat", "suburb": "Surfers Paradise", "phone": "0409 156 853", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Australian Surfing Adventures", "sector": "activity", "suburb": "Tallebudgera", "phone": "1300 499 617", "offer": "", "value": 0, "status": "lead", "source": "Groupon", "redemptions": 0},
+    {"name": "Bell Jar Cafe", "sector": "cafe", "suburb": "Burleigh Waters", "phone": "(07) 5568 7388", "offer": "", "value": 15, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Boattime Luxury Whale Watching", "sector": "activity", "suburb": "Main Beach", "phone": "0477 667 644", "offer": "", "value": 0, "status": "lead", "source": "Groupon", "redemptions": 0},
+    {"name": "Bottega Chevron Village", "sector": "eat", "suburb": "Surfers Paradise", "phone": "(07) 5511 7009", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Brazilian Flame Bar and Grill", "sector": "nightlife", "suburb": "Surfers Paradise", "phone": "0452 235 751", "offer": "", "value": 30, "status": "lead", "source": "Groupon", "redemptions": 0},
+    {"name": "Caffeine Kings", "sector": "eat", "suburb": "Miami", "phone": "0494 077 663", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Casa Brasil Restaurant", "sector": "eat", "suburb": "Surfers Paradise", "phone": "0451 882 800", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Cloud 8 Karaoke", "sector": "activity", "suburb": "Gold Coast", "phone": "0415 888 555", "offer": "", "value": 30, "status": "lead", "source": "Groupon", "redemptions": 0},
+    {"name": "Curry Express", "sector": "eat", "suburb": "Surfers Paradise", "phone": "(07) 5538 7791", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Dracula's Gold Coast", "sector": "eat", "suburb": "Broadbeach Waters", "phone": "(07) 5563 4900", "offer": "", "value": 55, "status": "lead", "source": "Groupon", "redemptions": 0},
+    {"name": "Due Amici Italian", "sector": "eat", "suburb": "Bundall", "phone": "(07) 5538 6041", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Eat Italiano", "sector": "eat", "suburb": "Mermaid Waters", "phone": "0418 489 547", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Euro Grill", "sector": "eat", "suburb": "Burleigh Waters", "phone": "(07) 5522 1175", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Event Cinemas Pacific Fair", "sector": "activity", "suburb": "Broadbeach", "phone": "1300 650 733", "offer": "", "value": 0, "status": "lead", "source": "Groupon", "redemptions": 0},
+    {"name": "Fu Manchu Oriental", "sector": "eat", "suburb": "Surfers Paradise", "phone": "0418 471 609", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Fuji Sushi", "sector": "eat", "suburb": "Surfers Paradise", "phone": "(07) 5502 9610", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Good Things Happen Cafe", "sector": "cafe", "suburb": "Benowa", "phone": "0499 788 555", "offer": "", "value": 15, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Hard Fizz Taproom", "sector": "nightlife", "suburb": "Burleigh Heads", "phone": "(07) 5630 3713", "offer": "", "value": 0, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Hound and Stag Brewing Co", "sector": "nightlife", "suburb": "Arundel", "phone": "0423 103 076", "offer": "", "value": 0, "status": "lead", "source": "Groupon", "redemptions": 0},
+    {"name": "Indian Delights", "sector": "eat", "suburb": "Miami", "phone": "(07) 5578 6488", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Jet Ski Safaris", "sector": "activity", "suburb": "Main Beach", "phone": "(07) 5526 3111", "offer": "", "value": 0, "status": "lead", "source": "Groupon", "redemptions": 0},
+    {"name": "Khao Piyo", "sector": "eat", "suburb": "Surfers Paradise", "phone": "0411 211 108", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Korean Chicken & Beer", "sector": "eat", "suburb": "Southport", "phone": "0493 605 770", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Local Burleigh", "sector": "eat", "suburb": "Burleigh Heads", "phone": "(07) 5535 2699", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Locali Pizzeria", "sector": "eat", "suburb": "Mermaid Beach", "phone": "0469 265 587", "offer": "", "value": 30, "status": "lead", "source": "Groupon", "redemptions": 0},
+    {"name": "Longboards Laidback Eatery & Bar", "sector": "nightlife", "suburb": "Surfers Paradise", "phone": "(07) 5538 2559", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Maman Bar & Kitchen", "sector": "nightlife", "suburb": "Burleigh Heads", "phone": "0485 088 390", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Manny's Wine and Fish House", "sector": "nightlife", "suburb": "Burleigh Heads", "phone": "0435 864 044", "offer": "", "value": 30, "status": "lead", "source": "Groupon", "redemptions": 0},
+    {"name": "Manolas Bros Deli", "sector": "eat", "suburb": "Isle of Capri", "phone": "(07) 5538 7603", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Masu Izakaya", "sector": "eat", "suburb": "Burleigh Heads", "phone": "0467 497 467", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Miami Rice", "sector": "eat", "suburb": "Miami", "phone": "(07) 5535 2112", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Montezumas", "sector": "eat", "suburb": "Surfers Paradise", "phone": "(07) 5538 4748", "offer": "", "value": 30, "status": "lead", "source": "Groupon", "redemptions": 0},
+    {"name": "Mr Hizola's", "sector": "eat", "suburb": "Burleigh Heads", "phone": "(07) 5576 3458", "offer": "", "value": 30, "status": "lead", "source": "Groupon", "redemptions": 0},
+    {"name": "Noodle Box", "sector": "eat", "suburb": "Broadbeach", "phone": "(07) 5538 0593", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Pancake Diner Burleigh", "sector": "eat", "suburb": "Burleigh Heads", "phone": "(07) 5620 2555", "offer": "", "value": 30, "status": "lead", "source": "Groupon", "redemptions": 0},
+    {"name": "Pancakes In Paradise", "sector": "eat", "suburb": "Surfers Paradise", "phone": "(07) 5592 0330", "offer": "", "value": 30, "status": "lead", "source": "Groupon", "redemptions": 0},
+    {"name": "Pizza On Coolibah", "sector": "eat", "suburb": "Southport", "phone": "(07) 5664 1916", "offer": "", "value": 15, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Precinct Brewing", "sector": "nightlife", "suburb": "Miami", "phone": "(07) 5576 0108", "offer": "", "value": 0, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Pretty Handsome", "sector": "eat", "suburb": "Burleigh Heads", "phone": "0434 811 444", "offer": "", "value": 15, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Rasa Italian Kitchen and Bar", "sector": "eat", "suburb": "Surfers Paradise", "phone": "0402 305 074", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Roji Cat Beer Bar", "sector": "nightlife", "suburb": "Miami", "phone": "", "offer": "", "value": 0, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "SPEC Gold Coast", "sector": "eat", "suburb": "Miami", "phone": "0461 282 821", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Seaside Kitchen & Bar", "sector": "nightlife", "suburb": "Burleigh Heads", "phone": "(07) 5633 4321", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Sekhon's Indian Cuisine", "sector": "eat", "suburb": "Miami", "phone": "(07) 5633 5458", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Shiraz Authentic Persian Restaurant", "sector": "eat", "suburb": "Surfers Paradise", "phone": "(07) 5679 3941", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Siam Street Thai", "sector": "eat", "suburb": "Mermaid Waters", "phone": "(07) 5664 3623", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Sogno Italiano", "sector": "eat", "suburb": "Burleigh Waters", "phone": "(07) 5633 4494", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Spice Venue Indian Restaurant", "sector": "eat", "suburb": "Surfers Paradise", "phone": "(07) 5591 7252", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Spirit of Gold Coast Whale Watching", "sector": "activity", "suburb": "Southport", "phone": "(07) 5572 7755", "offer": "", "value": 0, "status": "lead", "source": "Groupon", "redemptions": 0},
+    {"name": "Street Fryer", "sector": "eat", "suburb": "Miami", "phone": "0411 619 561", "offer": "", "value": 15, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Surfers Paradise Parasail", "sector": "activity", "suburb": "Main Beach", "phone": "0432 225 636", "offer": "", "value": 0, "status": "lead", "source": "Groupon", "redemptions": 0},
+    {"name": "Thai Culture", "sector": "eat", "suburb": "Benowa", "phone": "0452 430 690", "offer": "", "value": 15, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "The Aztec Restaurant and Tequila Bar", "sector": "nightlife", "suburb": "Broadbeach", "phone": "(07) 5538 8477", "offer": "", "value": 30, "status": "lead", "source": "Groupon", "redemptions": 0},
+    {"name": "The Henchman", "sector": "eat", "suburb": "Miami", "phone": "0419 956 449", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "The Tandoori Place", "sector": "eat", "suburb": "Surfers Paradise", "phone": "(07) 5538 0808", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Timezone Surfers Paradise", "sector": "activity", "suburb": "Surfers Paradise", "phone": "(07) 3050 0793", "offer": "", "value": 0, "status": "lead", "source": "Groupon", "redemptions": 0},
+    {"name": "Worongary Thai Restaurant", "sector": "eat", "suburb": "Worongary", "phone": "(07) 5522 7888", "offer": "", "value": 30, "status": "lead", "source": "Groupon", "redemptions": 0},
+    {"name": "Zambrero Burleigh Waters", "sector": "eat", "suburb": "Burleigh Waters", "phone": "(07) 5522 0359", "offer": "", "value": 15, "status": "lead", "source": "EatClub", "redemptions": 0},
+    {"name": "Zone Bowling", "sector": "activity", "suburb": "Surfers Paradise", "phone": "(07) 4058 8645", "offer": "", "value": 0, "status": "lead", "source": "Groupon", "redemptions": 0},
+    {"name": "iDumplings", "sector": "eat", "suburb": "Benowa", "phone": "(07) 5573 0774", "offer": "", "value": 30, "status": "lead", "source": "EatClub", "redemptions": 0},
     {"name": "ACTV Strength Co", "sector": "activity", "suburb": "Burleigh Heads", "phone": "0418 900 022", "offer": "", "value": 0, "status": "lead", "source": "Direct", "redemptions": 0},
     {"name": "Art Cafe Broadbeach", "sector": "cafe", "suburb": "Broadbeach", "phone": "(07) 5562 9300", "offer": "", "value": 0, "status": "lead", "source": "Direct", "redemptions": 0},
     {"name": "Baba Joon Persian Grill Restaurant Surfers Paradise", "sector": "eat", "suburb": "Surfers Paradise", "phone": "(07) 5649 8640", "offer": "", "value": 0, "status": "lead", "source": "Direct", "redemptions": 0},
@@ -228,7 +291,6 @@
     {"name": "Padlockd Escape Rooms & Bar - Beachfront", "sector": "activity", "suburb": "Surfers Paradise", "phone": "(07) 5551 5955", "offer": "", "value": 0, "status": "lead", "source": "Direct", "redemptions": 0},
     {"name": "Padlock\u2019d Escape Rooms -Paradise Centre", "sector": "activity", "suburb": "Surfers Paradise", "phone": "(07) 5551 5955", "offer": "", "value": 0, "status": "lead", "source": "Direct", "redemptions": 0},
     {"name": "Pig 'N' Whistle | Broadbeach", "sector": "nightlife", "suburb": "Broadbeach", "phone": "(07) 3061 2558", "offer": "", "value": 0, "status": "lead", "source": "Direct", "redemptions": 0},
-    {"name": "Rasa Italian Kitchen and Bar", "sector": "eat", "suburb": "Surfers Paradise", "phone": "0402 305 074", "offer": "", "value": 0, "status": "lead", "source": "Direct", "redemptions": 0},
     {"name": "Reading Cinemas", "sector": "activity", "suburb": "Surfers Paradise", "phone": "(07) 5500 9700", "offer": "", "value": 0, "status": "lead", "source": "Direct", "redemptions": 0},
     {"name": "Rumble", "sector": "activity", "suburb": "Broadbeach", "phone": "0488 587 555", "offer": "", "value": 0, "status": "lead", "source": "Direct", "redemptions": 0},
     {"name": "SEASIDE Kitchen & Bar Burleigh heads", "sector": "eat", "suburb": "Burleigh Heads", "phone": "(07) 5633 4321", "offer": "", "value": 0, "status": "lead", "source": "Direct", "redemptions": 0},
@@ -248,10 +310,17 @@
     {"name": "Vamoose Escape Rooms", "sector": "activity", "suburb": "Surfers Paradise", "phone": "0418 483 204", "offer": "", "value": 0, "status": "lead", "source": "Direct", "redemptions": 0}
   ];
 
+  // Bump this whenever the lead list is (re)loaded — forces browsers to drop any
+  // stale cached data and re-seed from the real leads. Your own edits after that persist.
+  const SEED_VERSION = "2026-08-22-live-1";
   function load(){
     let data;
-    try{ const d=JSON.parse(localStorage.getItem("wl_ops_partners")); if(d&&d.length) data=d; }catch(e){}
-    if(!data) data = SEED.map((p,i)=>({id:i+1,...p}));
+    try{
+      const ver = localStorage.getItem("wl_ops_seed_ver");
+      const d = JSON.parse(localStorage.getItem("wl_ops_partners"));
+      if(ver===SEED_VERSION && d && d.length) data=d;
+    }catch(e){}
+    if(!data){ data = SEED.map((p,i)=>({id:i+1,...p})); localStorage.setItem("wl_ops_seed_ver", SEED_VERSION); localStorage.removeItem("wl_live_partners"); }
     data.forEach(p=>{ if(p.lat==null){ const c=coordsFor(p.suburb); if(c){ p.lat=c.lat; p.lng=c.lng; } } });
     return data;
   }
