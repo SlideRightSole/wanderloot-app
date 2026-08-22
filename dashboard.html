@@ -339,7 +339,7 @@
     localStorage.setItem("wl_live_partners", JSON.stringify(live));
   }
   let partners = load();
-  let tab = "overview", filterStatus="all", filterSector="all", search="";
+  let tab = "overview", filterStatus="all", filterSector="food", search="";
   let editId = null;
 
   function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2400); }
@@ -398,17 +398,20 @@
 
   // ---------- Partners table ----------
   function renderPartners(){
+    const sectorMatch = p => filterSector==="all" || (filterSector==="food" ? (p.sector==="eat"||p.sector==="cafe") : p.sector===filterSector);
     let rows = partners.filter(p=>
       (filterStatus==="all"||p.status===filterStatus) &&
-      (filterSector==="all"||p.sector===filterSector) &&
+      sectorMatch(p) &&
       (!search || (p.name+p.suburb).toLowerCase().includes(search.toLowerCase()))
     );
+    // Best-first: warm leads (already on EatClub/Groupon) rise to the top, then A–Z.
+    rows.sort((a,b)=> (isWarm(b)?1:0)-(isWarm(a)?1:0) || (a.name||"").localeCompare(b.name||""));
     let html = `<div class="row-head"><h2 class="sec">Partners <span style="color:var(--muted);font-weight:600;font-size:15px">(${rows.length})</span></h2>
       <button class="btn" onclick="openAdd()">+ Add business</button></div>`;
     html += `<div class="toolbar">
       <input id="search" placeholder="Search name or suburb…" value="${search}">
       <select id="fStatus"><option value="all">All statuses</option>${STATUS.map(s=>`<option value="${s.k}" ${filterStatus===s.k?"selected":""}>${s.label}</option>`).join("")}</select>
-      <select id="fSector"><option value="all">All sectors</option>${SECTORS.map(s=>`<option value="${s.k}" ${filterSector===s.k?"selected":""}>${s.label}</option>`).join("")}</select>
+      <select id="fSector"><option value="food" ${filterSector==="food"?"selected":""}>Food (Restaurant + Cafe)</option><option value="all" ${filterSector==="all"?"selected":""}>All sectors</option>${SECTORS.map(s=>`<option value="${s.k}" ${filterSector===s.k?"selected":""}>${s.label}</option>`).join("")}</select>
     </div>`;
     html += `<div class="tablewrap"><table><thead><tr>
       <th>Business</th><th>Sector</th><th>Offer</th><th>Status</th><th>This month</th><th>Contact</th><th></th>
