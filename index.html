@@ -83,11 +83,12 @@
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
 
     /* Home nav tiles */
-    .home-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
-    .navtile { border: none; border-radius: 18px; padding: 16px 12px; cursor: pointer; color: #fff; text-align: left; box-shadow: 0 8px 20px rgba(35,38,80,0.08); transition: transform .15s; }
+    .home-nav { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+    .navtile { border: none; border-radius: 18px; padding: 14px 11px; cursor: pointer; color: #fff; text-align: left; box-shadow: 0 8px 20px rgba(35,38,80,0.08); transition: transform .15s; }
     .navtile:active { transform: scale(0.97); }
     .navtile.map { background: linear-gradient(135deg, var(--sky), var(--violet)); }
     .navtile.pass { background: linear-gradient(135deg, var(--mint), var(--sky)); }
+    .navtile.rewards { background: linear-gradient(135deg, var(--sun), #ff8b3d); }
     .navtile .t-ico { font-size: 26px; }
     .navtile .t-title { font-family: "Plus Jakarta Sans"; font-weight: 700; font-size: 16px; margin-top: 6px; }
     .navtile .t-sub { font-size: 12px; opacity: 0.95; font-weight: 700; }
@@ -222,6 +223,31 @@
     .nav-dist{ font-size:13px; color:#bff0e2; font-weight:700; margin-top:2px }
     .nav-mute{ flex:0 0 auto; background:rgba(255,255,255,.16); border:none; color:#fff; width:40px; height:40px; border-radius:10px; font-size:18px; cursor:pointer }
 
+    /* Rewards screen */
+    .rw-bal{ background:linear-gradient(135deg,var(--sun),#ff8b3d); color:#3a2400; border-radius:16px; padding:16px; text-align:center; margin-bottom:14px; }
+    .rw-bal .n{ font-family:"Plus Jakarta Sans"; font-weight:800; font-size:34px; line-height:1; }
+    .rw-bal .l{ font-size:13px; font-weight:800; opacity:.8; }
+    .rw-bal .tier{ margin-top:6px; font-size:12px; font-weight:800; }
+    .rw-h{ font-size:12px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin:16px 0 8px; }
+    .rw-spend{ display:flex; align-items:center; gap:12px; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:13px; margin-bottom:10px; }
+    .rw-spend .ico{ font-size:26px; flex:0 0 auto; }
+    .rw-spend .txt{ flex:1; min-width:0; } .rw-spend .txt b{ font-size:15px; } .rw-spend .txt div{ font-size:12.5px; color:var(--muted); }
+    .rw-spend button{ flex:0 0 auto; border:none; border-radius:10px; padding:9px 13px; font-weight:800; font-size:13px; color:#fff; background:var(--good); cursor:pointer; }
+    .rw-spend button:disabled{ background:var(--line); color:var(--muted); cursor:default; }
+    .rw-ladder{ display:flex; flex-direction:column; gap:8px; }
+    .rw-tier{ display:flex; gap:12px; align-items:flex-start; border:1px solid var(--line); border-radius:12px; padding:11px 13px; }
+    .rw-tier.on{ border-color:var(--sun); background:rgba(255,206,58,.08); }
+    .rw-tier.cur{ border-color:var(--good); background:rgba(55,226,176,.09); }
+    .rw-tier .badge{ flex:0 0 auto; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; background:var(--panel-2); }
+    .rw-tier.on .badge{ background:var(--sun); }
+    .rw-tier .tt b{ font-size:14.5px; } .rw-tier .tt .pts{ font-size:11.5px; color:var(--muted); font-weight:700; }
+    .rw-tier .tt p{ font-size:12.5px; color:var(--muted); margin-top:2px; }
+    .rw-lead{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:13px; }
+    .rw-lead .row{ display:flex; justify-content:space-between; font-size:13.5px; padding:5px 0; border-bottom:1px solid var(--line); }
+    .rw-lead .row:last-child{ border:none; } .rw-lead .row b{ font-weight:800; }
+    .rw-lead .prize{ margin-top:10px; font-size:12.5px; color:var(--sun); font-weight:800; }
+    .rw-lead .me{ color:var(--good); }
+
     /* burst */
     #burst { position: fixed; inset: 0; pointer-events: none; z-index: 80; overflow: hidden; }
     .confetti { position: absolute; width: 11px; height: 15px; top: 42%; left: 50%; border-radius: 3px; opacity: 0; animation: confetti 1s ease-out forwards; }
@@ -326,6 +352,7 @@
       <div class="home-nav">
         <button class="navtile map" id="openMap"><div class="t-ico">🗺️</div><div class="t-title">Explorer map</div><div class="t-sub" id="navMapSub">0 discovered</div></button>
         <button class="navtile pass" id="openPassport"><div class="t-ico">🎫</div><div class="t-title">Passport</div><div class="t-sub" id="navPassSub">0 stamps</div></button>
+        <button class="navtile rewards" id="openRewards"><div class="t-ico">🏆</div><div class="t-title">Rewards</div><div class="t-sub" id="navRewSub">0 pts</div></button>
       </div>
 
       <div class="card tiercard">
@@ -456,6 +483,15 @@
       </div>
     </div>
 
+    <!-- REWARDS -->
+    <div id="rewardsView" class="hidden">
+      <div class="card fade">
+        <div class="vp-h">Rewards</div>
+        <div id="rewardsBody"></div>
+        <button class="btn ghost" id="rewardsBack" style="margin-top:14px;">Back</button>
+      </div>
+    </div>
+
     <!-- VENUES -->
     <div id="venues" class="hidden">
       <div class="card venues fade">
@@ -583,7 +619,7 @@
     drive: [ {v:20,t:"30 min",s:"~20 km"}, {v:55,t:"1 hour",s:"~55 km",sel:1}, {v:120,t:"2 hours",s:"~120 km"}, {v:250,t:"Half day",s:"~250 km"}, {v:600,t:"No limit",s:"Go far"} ],
     walk:  [ {v:0.5,t:"5 min",s:"~500 m"}, {v:1,t:"10 min",s:"~1 km",sel:1}, {v:1.6,t:"20 min",s:"~1.5 km"}, {v:2.5,t:"30 min",s:"~2.5 km"}, {v:5,t:"1 hour",s:"~5 km"} ]
   };
-  let chosen, umap, umarker, emap, watchId = null, demoTimer = null, arrived = false;
+  let chosen, umap, umarker, emap, watchId = null, demoTimer = null, arrived = false, premiumActive = false;
 
   const LS = {
     get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } },
@@ -610,12 +646,29 @@
   function bumpStreak() {
     const s = getStreak(), today = dayStr(new Date());
     if (s.last === today) return s.count;
-    const y = new Date(); y.setDate(y.getDate() - 1);
-    s.count = (s.last === dayStr(y)) ? (s.count || 0) + 1 : 1;
+    const y1 = new Date(); y1.setDate(y1.getDate() - 1);
+    const y2 = new Date(); y2.setDate(y2.getDate() - 2);
+    if (s.last === dayStr(y1)) { s.count = (s.count || 0) + 1; }
+    else if (s.last === dayStr(y2) && getFreezes() > 0) { setFreezes(getFreezes() - 1); s.count = (s.count || 0) + 1; toast("Streak freeze used — your run is safe 🧊"); }
+    else { s.count = 1; }
     s.last = today; LS.set("md_streak", s); return s.count;
   }
   // Rare "golden" finds (variable reward) — ~1 in 5 venues, deterministic
   function isRare(pl) { let h = 0; const n = pl.name || ""; for (let i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) >>> 0; return h % 5 === 0; }
+
+  // Rewards economy — points buy access & chances, never cash
+  const getFreezes = () => LS.get("md_freezes", 0);
+  const setFreezes = (n) => LS.set("md_freezes", Math.max(0, n));
+  function spendPoints(cost) { if (getPoints() < cost) return false; addPoints(-cost); return true; }
+  const isPremium = p => (p.tier === "priority") || ((p.value || 0) >= 25);
+  const PREMIUM_COST = 500, FREEZE_COST = 150;
+  const TIER_PERKS = {
+    "Rookie": "Everyday mysteries and standard offers.",
+    "Explorer": "Bigger offers start unlocking at partner venues.",
+    "Adventurer": "Premium venues open up, plus a tier-bonus reward on arrival.",
+    "Trailblazer": "First access to brand-new partners and more rare finds.",
+    "Legend": "Top-tier offers and a shot at the monthly leaderboard crown."
+  };
 
   // ============ Helpers ============
   function animateIn(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
@@ -643,7 +696,7 @@
     setTimeout(() => { host.innerHTML = ""; }, 1200);
   }
 
-  const SECTIONS = ["onboard", "setup", "result", "mapView", "passportView", "venues"];
+  const SECTIONS = ["onboard", "setup", "result", "mapView", "passportView", "rewardsView", "venues"];
   function showOnly(id) {
     SECTIONS.forEach(s => document.getElementById(s).classList.add("hidden"));
     document.getElementById(id).classList.remove("hidden");
@@ -753,6 +806,7 @@
     }
     document.getElementById("navMapSub").textContent = discoveredCount() + " discovered";
     document.getElementById("navPassSub").textContent = stampCount() + " stamps";
+    const rw = document.getElementById("navRewSub"); if (rw) rw.textContent = getPoints() + " pts";
     const sc = getStreak(), strChip = document.getElementById("streakChip");
     if (strChip) { if (sc.count > 0) { strChip.classList.remove("hidden"); document.getElementById("streakN").textContent = sc.count; } else { strChip.classList.add("hidden"); } }
     const pts = getPoints(), tier = tierFor(pts), nxt = nextTier(pts);
@@ -844,6 +898,11 @@
     if (!m.length) m = PLACES.filter(p => inRange(p) && familyOk(p) && notUsed(p));
     if (!m.length) m = PLACES.filter(p => inRange(p) && familyOk(p));
     if (!m.length) { err.textContent = "Nothing in range. Try a longer drive distance."; return; }
+    premiumActive = false;
+    if (LS.get("md_premium", false)) {
+      const prem = m.filter(isPremium);
+      if (prem.length) { m = prem; premiumActive = true; LS.set("md_premium", false); } // spend honoured; else keep it for a longer trip
+    }
     chosen = pickDestination(m);
     showResult();
   });
@@ -856,7 +915,7 @@
     const m = MODE[state.mode];
     const roadKm = haversine(state.start, [chosen.lat, chosen.lng]) * m.factor;
     document.getElementById("eta").textContent = Math.round(roadKm / m.speed * 60) + " min";
-    document.getElementById("driveKicker").textContent = "Mystery " + m.verb + " underway";
+    document.getElementById("driveKicker").textContent = (premiumActive ? "⭐ Premium mystery " : "Mystery ") + m.verb + " underway";
     document.getElementById("etaLabel").textContent = "est. " + m.verb;
     document.getElementById("liveBtn").textContent = "Start live " + m.verb + " (use my GPS)";
     document.getElementById("catV").textContent = catName[chosen.cat] || "Surprise";
@@ -1225,6 +1284,44 @@
     document.getElementById("vpCount").textContent = getRedeemed().length;
     showOnly("venues");
   });
+
+  // ============ Rewards ============
+  document.getElementById("rewardsBack").addEventListener("click", backHome);
+  document.getElementById("openRewards").addEventListener("click", openRewards);
+  function spendRow(ico, title, sub, cost, pts, key) {
+    const can = pts >= cost;
+    return '<div class="rw-spend"><div class="ico">' + ico + '</div><div class="txt"><b>' + title + '</b><div>' + sub + '</div></div>' +
+           '<button id="buy' + key + '"' + (can ? '' : ' disabled') + '>' + cost + ' pts</button></div>';
+  }
+  function leadRow(name, val, me) { return '<div class="row' + (me ? ' me' : '') + '"><span>' + name + '</span><b>' + val + ' pts</b></div>'; }
+  function openRewards() {
+    showOnly("rewardsView");
+    const pts = getPoints(), tier = tierFor(pts), nxt = nextTier(pts), fr = getFreezes(), me = getProfile() ? getProfile().name : "You";
+    let h = '<div class="rw-bal"><div class="n">' + pts + '</div><div class="l">POINTS</div><div class="tier">' + tier.name + (nxt ? ' · ' + (nxt.min - pts) + ' to ' + nxt.name : ' · top tier reached') + '</div></div>';
+    h += '<div class="rw-h">Spend your points</div>';
+    h += spendRow('⭐', 'Unlock a premium mystery', 'Your next mystery is a guaranteed premium venue.', PREMIUM_COST, pts, 'Premium');
+    h += spendRow('🧊', 'Streak freeze' + (fr ? ' — you have ' + fr : ''), 'Protects your 🔥 streak if you miss a day.', FREEZE_COST, pts, 'Freeze');
+    h += '<div class="rw-h">Tiers &amp; what they unlock</div><div class="rw-ladder">';
+    TIERS.forEach(t => {
+      const reached = pts >= t.min, cur = t.name === tier.name;
+      h += '<div class="rw-tier ' + (cur ? 'cur' : (reached ? 'on' : '')) + '"><div class="badge">' + (cur ? '📍' : (reached ? '✓' : '🔒')) + '</div>' +
+           '<div class="tt"><b>' + t.name + '</b> <span class="pts">' + t.min + ' pts</span><p>' + (TIER_PERKS[t.name] || '') + '</p></div></div>';
+    });
+    h += '</div>';
+    h += '<div class="rw-h">This month’s top explorers</div><div class="rw-lead">' +
+           leadRow('1. Maya R.', '1,240') + leadRow('2. Jordan T.', '1,090') + leadRow('3. ' + me + ' (you)', pts.toLocaleString(), true) +
+           '<div class="prize">🏆 Prize: a $200 dinner, sponsored by a WanderLoot partner.</div></div>';
+    document.getElementById("rewardsBody").innerHTML = h;
+    const pb = document.getElementById("buyPremium"); if (pb) pb.onclick = () => {
+      if (LS.get("md_premium", false)) { toast("You already have a premium mystery waiting ⭐"); return; }
+      if (spendPoints(PREMIUM_COST)) { LS.set("md_premium", true); refreshChrome(); toast("Premium unlocked! It's waiting on your next mystery ⭐"); openRewards(); }
+      else toast("Not enough points yet — keep exploring!");
+    };
+    const fb = document.getElementById("buyFreeze"); if (fb) fb.onclick = () => {
+      if (spendPoints(FREEZE_COST)) { setFreezes(getFreezes() + 1); refreshChrome(); toast("Streak freeze earned 🧊"); openRewards(); }
+      else toast("Not enough points yet — keep exploring!");
+    };
+  }
 
   document.getElementById("openMap").addEventListener("click", () => {
     showOnly("mapView");
