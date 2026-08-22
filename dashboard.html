@@ -93,8 +93,10 @@
   .col{background:var(--panel-2); border:1px solid var(--line); border-radius:14px; padding:10px; min-height:120px}
   .col h4{font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center}
   .col h4 .c{background:var(--panel); border-radius:20px; padding:1px 8px; font-size:12px; color:var(--muted)}
-  .vcard{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:9px 10px; margin-bottom:8px; font-size:12.5px}
+  .vcard{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:9px 10px; margin-bottom:8px; font-size:12.5px; cursor:pointer; transition:border-color .15s, transform .1s}
+  .vcard:hover{border-color:var(--teal); transform:translateY(-1px)}
   .vcard b{font-size:13px} .vcard .m{color:var(--muted); font-size:11.5px}
+  .vname:hover{color:var(--teal-deep); text-decoration:underline}
 
   /* modal */
   .modal{position:fixed; inset:0; background:rgba(15,35,41,.5); display:none; align-items:center; justify-content:center; z-index:50; padding:18px}
@@ -413,7 +415,7 @@
     rows.forEach(p=>{
       const sc=sCfg(p.status), b=billing(p);
       html += `<tr>
-        <td><div class="vname">${p.name}</div><div class="vsub">${p.suburb}</div></td>
+        <td><div class="vname" onclick="openEdit(${p.id})" style="cursor:pointer">${p.name}</div><div class="vsub">${p.suburb}</div></td>
         <td><span class="pill" style="background:${secCfg(p.sector).color}18; color:${secCfg(p.sector).color}">${secCfg(p.sector).label}</span></td>
         <td style="max-width:220px">${p.offer}<div class="vsub">~$${p.value} · ${p.source}</div></td>
         <td><select class="statusSel" onchange="setStatus(${p.id}, this.value)">${STATUS.map(s=>`<option value="${s.k}" ${p.status===s.k?"selected":""}>${s.label}</option>`).join("")}</select></td>
@@ -433,7 +435,7 @@
     STATUS.forEach(s=>{
       const list = partners.filter(p=>p.status===s.k);
       html += `<div class="col"><h4 style="color:${s.color}">${s.label}<span class="c num">${list.length}</span></h4>${
-        list.map(p=>`<div class="vcard"><b>${p.name}</b><div class="m">${secCfg(p.sector).label} · ${p.suburb}</div>${p.redemptions>0?`<div class="m num">${p.redemptions}/${BILL_AT} redemptions</div>`:""}</div>`).join("") || `<div class="m" style="color:var(--muted);font-size:12px;padding:4px">Empty</div>`
+        list.map(p=>`<div class="vcard" onclick="openEdit(${p.id})" title="Open ${(p.name||'').replace(/"/g,'')}"><b>${p.name}</b><div class="m">${secCfg(p.sector).label} · ${p.suburb}</div>${p.phone&&p.phone!=="—"?`<div class="m">📞 ${p.phone}</div>`:""}${p.redemptions>0?`<div class="m num">${p.redemptions}/${BILL_AT} this month</div>`:""}</div>`).join("") || `<div class="m" style="color:var(--muted);font-size:12px;padding:4px">Empty</div>`
       }</div>`;
     });
     html += `</div>`;
@@ -448,18 +450,28 @@
     document.getElementById("mName").value=""; document.getElementById("mSuburb").value=""; document.getElementById("mPhone").value="";
     document.getElementById("mOffer").value=""; document.getElementById("mValue").value="";
     document.getElementById("mSector").value=SECTORS[0].k; document.getElementById("mStatus").value="lead"; document.getElementById("mSource").value=SOURCES[0];
-    document.getElementById("modal").classList.add("on"); };
+    document.getElementById("mSave").textContent="Save business"; document.getElementById("modal").classList.add("on"); };
+  const dash=s=> (s&&s!=="—")?s:"";
+  window.openEdit = (id)=>{ const p=partners.find(x=>x.id===id); if(!p) return; editId=id;
+    document.getElementById("modalTitle").textContent=p.name;
+    document.getElementById("mName").value=p.name;
+    document.getElementById("mSuburb").value=dash(p.suburb); document.getElementById("mPhone").value=dash(p.phone);
+    document.getElementById("mOffer").value=dash(p.offer); document.getElementById("mValue").value=p.value||"";
+    document.getElementById("mSector").value=p.sector; document.getElementById("mStatus").value=p.status;
+    document.getElementById("mSource").value=p.source||SOURCES[0];
+    document.getElementById("mSave").textContent="Save changes"; document.getElementById("modal").classList.add("on"); };
   document.getElementById("mCancel").onclick=()=>document.getElementById("modal").classList.remove("on");
   document.getElementById("modal").addEventListener("click",e=>{ if(e.target.id==="modal") e.target.classList.remove("on"); });
   document.getElementById("mSave").onclick=()=>{
     const name=document.getElementById("mName").value.trim();
     if(!name){ toast("Give the business a name"); return; }
-    const rec={ id:Math.max(0,...partners.map(p=>p.id))+1, name,
+    const fields={ name,
       sector:document.getElementById("mSector").value, suburb:document.getElementById("mSuburb").value.trim()||"—",
       phone:document.getElementById("mPhone").value.trim()||"—", status:document.getElementById("mStatus").value,
       offer:document.getElementById("mOffer").value.trim()||"—", value:+document.getElementById("mValue").value||0,
-      source:document.getElementById("mSource").value, redemptions:0 };
-    partners.unshift(rec); save(); document.getElementById("modal").classList.remove("on"); render(); toast(name+" added");
+      source:document.getElementById("mSource").value };
+    if(editId!=null){ const p=partners.find(x=>x.id===editId); if(p) Object.assign(p,fields); save(); document.getElementById("modal").classList.remove("on"); render(); toast(name+" updated"); }
+    else { partners.unshift({ id:Math.max(0,...partners.map(p=>p.id))+1, ...fields, redemptions:0 }); save(); document.getElementById("modal").classList.remove("on"); render(); toast(name+" added"); }
   };
 
   // ---------- Boot ----------
