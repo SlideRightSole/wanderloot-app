@@ -360,7 +360,7 @@
     let html = `<div class="livebar">🗺️ <b class="num">${liveNow}</b> partners are live on the customer map right now — set any partner to <b>Active</b> and they appear in the app instantly.</div><div class="kpis">
       ${kpi("Signed partners", signed.length, active.length+" live &amp; delivering")}
       ${kpi("Billing this month", billingCount, BILL_AT+"+ delivered this month","gold")}
-      ${kpi("This month's revenue", "$"+mrr, billingCount+" shops &times; $"+FEE,"hero")}
+      ${kpi("This month's revenue", "$"+mrr, billingCount+" partners &times; $"+FEE,"hero")}
       ${kpi("Redemptions", totalRedemptions, "customers delivered")}
       ${kpi("In pipeline", pipelineCount, "leads &rarr; meetings")}
       ${kpi("Total on file", partners.length, "across "+new Set(partners.map(p=>p.suburb)).size+" suburbs")}

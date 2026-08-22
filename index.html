@@ -147,7 +147,7 @@
     .mockrow { display: flex; gap: 8px; margin-top: 10px; }
     .mockrow .btn { padding: 12px; font-size: 14px; }
 
-    /* Redeem-at-shop (scan the shop's WanderLoot code) */
+    /* Redeem-at-venue (scan the partner's WanderLoot code) */
     .redeemed-card { background: linear-gradient(180deg, rgba(55,226,176,0.18), rgba(55,226,176,0.05)); border: 1px solid var(--good); border-radius: 14px; padding: 14px; text-align: center; }
     .redeemed-card .rc-check { width: 44px; height: 44px; border-radius: 50%; background: var(--good); color: #05271a; font-size: 26px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; }
     .redeemed-card .rc-title { font-family: "Plus Jakarta Sans"; font-size: 18px; font-weight: 800; color: var(--good); }
@@ -917,7 +917,7 @@
     const ov = document.createElement("div");
     ov.className = "scan-overlay"; ov.id = "scanOverlay";
     ov.innerHTML =
-      '<h3>Scan the shop code</h3>' +
+      '<h3>Scan the venue code</h3>' +
       '<div class="scan-where">Point at the WanderLoot code at ' + venue + '</div>' +
       '<div class="scan-view">' + qrSvg(chosen.name) +
         '<span class="c1"></span><span class="c2"></span><div class="scan-laser"></div></div>' +
