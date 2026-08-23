@@ -345,6 +345,8 @@
 
   function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2400); }
   const billing = p => p.redemptions >= BILL_AT;   // redemptions = THIS month's delivered customers; 5+ triggers the $97
+  const CPA_GOAL = 10;                              // target cost-per-customer; hit at 10+ delivered ($97/10 = $9.70)
+  const cpa = p => (billing(p) && p.redemptions) ? FEE / p.redemptions : 0;   // what each customer cost this partner
 
   // ---------- Overview ----------
   function renderOverview(){
@@ -354,6 +356,8 @@
     const totalRedemptions = partners.reduce((a,p)=>a+p.redemptions,0);
     const pipelineCount = partners.filter(p=>["lead","contacted","interested","meeting"].includes(p.status)).length;
     const mrr = billingCount * FEE;
+    const billedCustomers = partners.filter(billing).reduce((a,p)=>a+p.redemptions,0);
+    const avgCPA = billedCustomers ? mrr / billedCustomers : 0;
     const nearBill = partners.filter(p=>!billing(p) && p.redemptions>0 && p.redemptions>=BILL_AT-1);
 
     const kpi = (k,v,s,cls="")=>`<div class="kpi ${cls}"><div class="k">${k}</div><div class="v num">${v}</div><div class="s">${s}</div></div>`;
@@ -361,7 +365,7 @@
     let html = `<div class="livebar">🗺️ <b class="num">${liveNow}</b> partners are live on the customer map right now — set any partner to <b>Active</b> and they appear in the app instantly.</div><div class="kpis">
       ${kpi("Signed partners", signed.length, active.length+" live &amp; delivering")}
       ${kpi("Billing this month", billingCount, BILL_AT+"+ delivered this month","gold")}
-      ${kpi("This month's revenue", "$"+mrr.toLocaleString(), billingCount+" partners &times; $"+FEE,"hero")}
+      ${kpi("This month's revenue", "$"+mrr.toLocaleString(), billedCustomers?("avg $"+avgCPA.toFixed(2)+" / customer · goal &lt;$"+CPA_GOAL):(billingCount+" &times; $"+FEE),"hero")}
       ${kpi("Redemptions", totalRedemptions, "customers delivered")}
       ${kpi("In pipeline", pipelineCount, "leads &rarr; meetings")}
       ${kpi("Total on file", partners.length, "across "+new Set(partners.map(p=>p.suburb)).size+" suburbs")}
@@ -424,7 +428,7 @@
         <td><span class="pill" style="background:${secCfg(p.sector).color}18; color:${secCfg(p.sector).color}">${secCfg(p.sector).label}</span></td>
         <td style="max-width:240px">${p.offer && p.offer!=="—" ? p.offer : '<span class="vsub">No WanderLoot offer set yet</span>'}<div class="vsub">~$${p.value} · ${p.source}${isWarm(p)?` · `+dealLink(p,"their current deal"):""}</div></td>
         <td><select class="statusSel" onchange="setStatus(${p.id}, this.value)">${STATUS.map(s=>`<option value="${s.k}" ${p.status===s.k?"selected":""}>${s.label}</option>`).join("")}</select></td>
-        <td>${ b ? `<span class="billy">Billing this month · $${FEE}</span>` : `<div class="prog"><span class="num">${p.redemptions}/${BILL_AT}</span><span class="pt"><i style="width:${Math.min(100,p.redemptions/BILL_AT*100)}%"></i></span></div>` }</td>
+        <td>${ b ? `<span class="billy">$${FEE}</span><div class="vsub">${p.redemptions} customers · <span style="font-weight:800;color:${cpa(p)<=CPA_GOAL?'var(--good)':'#d98a0f'}">$${cpa(p).toFixed(2)}/ea</span></div>` : `<div class="prog"><span class="num">${p.redemptions}/${BILL_AT}</span><span class="pt"><i style="width:${Math.min(100,p.redemptions/BILL_AT*100)}%"></i></span></div>` }</td>
         <td class="vsub">${p.phone}</td>
         <td><button class="btn ghost sm" onclick="addRedemption(${p.id})">+ Redemption</button></td>
       </tr>`;
