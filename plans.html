@@ -23,10 +23,11 @@
 
   .card{ background:var(--card); border:1px solid var(--line); border-radius:22px; box-shadow:var(--shadow); padding:34px 28px; margin-top:26px; position:relative; overflow:hidden; }
   .card::before{ content:""; position:absolute; inset:0; background:radial-gradient(520px 220px at 90% -20%, rgba(15,184,148,.10), transparent 60%); pointer-events:none; }
-  .price{ position:relative; display:flex; align-items:baseline; justify-content:center; gap:6px; }
-  .price .n{ font-family:"Bricolage Grotesque"; font-weight:800; font-size:64px; line-height:1; color:var(--teal-ink); }
-  .price .per{ font-size:18px; color:var(--muted); font-weight:700; }
-  .cond{ position:relative; font-size:16px; font-weight:800; color:var(--teal-deep); margin-top:12px; }
+  .price{ position:relative; display:flex; align-items:baseline; justify-content:center; gap:8px; }
+  .price .n{ font-family:"Bricolage Grotesque"; font-weight:800; font-size:96px; line-height:.9; color:var(--good); letter-spacing:-.02em; }
+  .price .per{ font-size:19px; color:var(--muted); font-weight:800; }
+  .cond{ position:relative; font-size:17px; font-weight:800; color:var(--teal-deep); margin-top:16px; }
+  .cond b{ color:var(--teal-ink); }
   .cond b{ color:var(--teal-ink); }
   .free{ position:relative; display:inline-block; margin-top:14px; background:#effbf7; border:1px solid #cdeee4; border-radius:20px; padding:8px 16px; font-size:13.5px; font-weight:700; color:var(--teal-deep); }
 
@@ -47,13 +48,13 @@
 <div class="wrap">
   <div class="eyebrow">For Gold Coast venues</div>
   <div class="wordmark f">Wander<span>Loot</span><small>PARTNERS</small></div>
-  <h1>One simple price. You only pay when we deliver.</h1>
+  <h1>Free to start. You only pay when we deliver.</h1>
   <p class="sub">New customers who weren't looking for you, sent to your door — with nothing to lose.</p>
 
   <div class="card">
-    <div class="price"><span class="n f">$97</span><span class="per">/ month</span></div>
-    <div class="cond">Charged only in a month we bring you <b>5 or more customers</b>.</div>
-    <div class="free">Any month with fewer than 5 is completely free.</div>
+    <div class="price"><span class="n f">$0</span><span class="per">to start</span></div>
+    <div class="cond">You only pay <b>$97</b> in a month we bring you <b>5+ customers</b>.</div>
+    <div class="free">Every month with fewer than 5 stays $0 — you pay only when we deliver.</div>
 
     <ul class="points">
       <li><span class="ck">✓</span><span><b>No fee to join</b> and no fee until we've delivered — you never pay before we've proven it.</span></li>
