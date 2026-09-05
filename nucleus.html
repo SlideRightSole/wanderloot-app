@@ -1,0 +1,149 @@
+<title>WanderLoot Nucleus</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#eef3f3; --card:#ffffff; --panel:#f7fbfa; --ink:#0f2329; --muted:#5d7178;
+    --teal:#0fb894; --teal-deep:#0a7d67; --teal-ink:#063f34;
+    --gold:#e0a01c; --gold-soft:#fbf0d5; --line:#e0eae8; --good:#12b886;
+    --shadow:0 18px 44px rgba(10,60,52,.10);
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  body{ background:var(--paper); color:var(--ink); font-family:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased; padding:32px 16px 60px; }
+  .f{font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif}
+  .wrap{max-width:920px; margin:0 auto}
+  .head{ text-align:center; margin-bottom:26px; }
+  .eyebrow{ font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--teal-deep); margin-bottom:12px; }
+  .wordmark{ font-size:32px; font-weight:800; letter-spacing:-.02em; }
+  .wordmark span{ color:var(--teal) }
+  h1{ font-family:"Bricolage Grotesque"; font-size:27px; font-weight:800; margin-top:12px; text-wrap:balance; }
+  .head p{ font-size:16px; color:#20393f; max-width:56ch; margin:8px auto 0; }
+
+  /* Golden circle */
+  .circle-wrap{ display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:30px; background:var(--card); border:1px solid var(--line); border-radius:22px; box-shadow:var(--shadow); padding:30px 26px; margin-bottom:22px; }
+  svg.gc{ width:320px; height:320px; flex:0 0 auto; }
+  .legend{ flex:1; min-width:260px; display:flex; flex-direction:column; gap:14px; }
+  .leg{ display:flex; gap:13px; align-items:flex-start; }
+  .leg .dot{ flex:0 0 auto; width:14px; height:14px; border-radius:50%; margin-top:4px; }
+  .leg.why .dot{ background:var(--teal-deep) } .leg.how .dot{ background:var(--gold) } .leg.what .dot{ background:#9fc7bd }
+  .leg .lab{ font-family:"Bricolage Grotesque"; font-weight:800; font-size:15px; }
+  .leg.why .lab{ color:var(--teal-deep) } .leg.how .lab{ color:#b9810f } .leg.what .lab{ color:var(--teal-ink) }
+  .leg p{ font-size:14px; color:#3d545a; margin-top:2px; }
+  .leg p b{ color:var(--ink) }
+
+  /* Why banner */
+  .why-banner{ background:linear-gradient(135deg,var(--teal-deep),#0c9c7f); color:#eafff8; border-radius:18px; padding:24px 26px; text-align:center; margin-bottom:26px; box-shadow:0 14px 30px rgba(10,125,103,.28); }
+  .why-banner .k{ font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:#bfeee0; }
+  .why-banner .big{ font-family:"Bricolage Grotesque"; font-weight:800; font-size:26px; margin-top:8px; line-height:1.15; text-wrap:balance; }
+  .why-banner .sub{ font-size:15px; color:#d6f6ec; margin-top:8px; max-width:52ch; margin-left:auto; margin-right:auto; }
+
+  .sect-label{ font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:0 0 14px; text-align:center; }
+  .pillars{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+  .pillar{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px; box-shadow:var(--shadow); }
+  .pillar .ico{ font-size:26px; }
+  .pillar h3{ font-family:"Bricolage Grotesque"; font-size:18px; font-weight:800; margin:8px 0 3px; }
+  .pillar .role{ font-size:12px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--teal-deep); margin-bottom:8px; }
+  .pillar ul{ list-style:none; display:flex; flex-direction:column; gap:7px; }
+  .pillar li{ font-size:13.5px; color:#3d545a; display:flex; gap:8px; align-items:flex-start; }
+  .pillar li .ck{ color:var(--gold); font-weight:800; flex:0 0 auto; }
+  .pillar .tie{ font-size:12.5px; color:var(--muted); font-style:italic; margin-top:12px; border-top:1px solid var(--line); padding-top:10px; }
+
+  .foot{ text-align:center; margin-top:26px; }
+  .foot .tag{ font-family:"Bricolage Grotesque"; font-weight:800; font-size:20px; color:var(--teal-ink); }
+  .foot .site{ font-size:13px; color:var(--muted); margin-top:6px; }
+
+  @media(max-width:640px){ .pillars{ grid-template-columns:1fr } svg.gc{ width:280px; height:280px } }
+</style>
+
+<div class="wrap">
+  <div class="head">
+    <div class="eyebrow">The nucleus · why → how → what</div>
+    <div class="wordmark f">Wander<span>Loot</span></div>
+    <h1>What we're really building — and how we execute around it.</h1>
+    <p>Everything we do serves one thing at the centre: getting people out of the house and into an adventure.</p>
+  </div>
+
+  <!-- Golden Circle -->
+  <div class="circle-wrap">
+    <svg class="gc" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Golden circle: Why at the centre, How, then What">
+      <circle cx="160" cy="160" r="150" fill="#eaf5f1" stroke="#cfe6df" stroke-width="1.5"/>
+      <circle cx="160" cy="160" r="105" fill="#fbf0d5" stroke="#eed6a2" stroke-width="1.5"/>
+      <circle cx="160" cy="160" r="60" fill="#0a7d67"/>
+      <text x="160" y="24" text-anchor="middle" font-family="Bricolage Grotesque" font-weight="800" font-size="15" fill="#0f2329">WHAT</text>
+      <text x="160" y="76" text-anchor="middle" font-family="Bricolage Grotesque" font-weight="800" font-size="15" fill="#b9810f">HOW</text>
+      <text x="160" y="150" text-anchor="middle" font-family="Bricolage Grotesque" font-weight="800" font-size="18" fill="#ffffff">WHY</text>
+      <text x="160" y="172" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="11" fill="#bfeee0">Adventure</text>
+      <text x="160" y="187" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="11" fill="#bfeee0">&amp; discovery</text>
+    </svg>
+    <div class="legend">
+      <div class="leg why"><span class="dot"></span><div><div class="lab">WHY — the belief</div><p>The best nights are the ones you didn't plan. We exist to get people <b>off the couch and into an adventure</b> — turning "I don't know what to do" into a surprise worth leaving for.</p></div></div>
+      <div class="leg how"><span class="dot"></span><div><div class="lab">HOW — what makes it work</div><p>A <b>surprise destination</b> matched to your budget, distance and mood; a <b>real reward</b> waiting from a local venue; and discovery turned into a <b>game</b> — passport, loot, tiers.</p></div></div>
+      <div class="leg what"><span class="dot"></span><div><div class="lab">WHAT — the product</div><p>A <b>free app</b> that hides a local destination, reveals it on arrival, and hands you a reward. Partners get <b>new dine-in customers</b> and only pay once we deliver.</p></div></div>
+    </div>
+  </div>
+
+  <div class="why-banner">
+    <div class="k">The one sentence everything serves</div>
+    <div class="big">Turn "I don't know what to do" into an adventure worth leaving the house for.</div>
+    <div class="sub">Every feature, every partner, every dollar of marketing has to make that feeling easier to reach.</div>
+  </div>
+
+  <!-- Execution pillars -->
+  <div class="sect-label">How we execute — the four things we get right</div>
+  <div class="pillars">
+    <div class="pillar">
+      <div class="ico">🧭</div>
+      <div class="role">The Adventure · experience</div>
+      <h3>Protect the magic</h3>
+      <ul>
+        <li><span class="ck">›</span>Nail the arrival reveal — the moment people remember and retell.</li>
+        <li><span class="ck">›</span>Keep it one-tap easy — no decisions, no friction to "just go."</li>
+        <li><span class="ck">›</span>Make exploring your own city a game — loot, passport, tiers.</li>
+      </ul>
+      <div class="tie">Serves the why: the feeling of spontaneity is the product.</div>
+    </div>
+
+    <div class="pillar">
+      <div class="ico">🍽️</div>
+      <div class="role">Good Food &amp; Local Gems · partners</div>
+      <h3>Somewhere worth the trip</h3>
+      <ul>
+        <li><span class="ck">›</span>Food first — sign quality restaurants and cafés to launch.</li>
+        <li><span class="ck">›</span>Curate places people are glad they discovered.</li>
+        <li><span class="ck">›</span>Keep the reward real, and only ever charge once we deliver.</li>
+      </ul>
+      <div class="tie">Serves the why: the adventure has to end somewhere good.</div>
+    </div>
+
+    <div class="pillar">
+      <div class="ico">📣</div>
+      <div class="role">Getting People Out · marketing</div>
+      <h3>No adventurers, no adventure</h3>
+      <ul>
+        <li><span class="ck">›</span>Validate demand cheaply before building everything.</li>
+        <li><span class="ck">›</span>Own the "what should we do tonight?" moment.</li>
+        <li><span class="ck">›</span>Grow through referrals and word of mouth; launch one dense area at a time.</li>
+      </ul>
+      <div class="tie">Serves the why: you can't rediscover the world alone.</div>
+    </div>
+
+    <div class="pillar">
+      <div class="ico">⚙️</div>
+      <div class="role">The Engine · product &amp; trust</div>
+      <h3>Lean and trustworthy</h3>
+      <ul>
+        <li><span class="ck">›</span>Build a real backend — honest redemption, reliable navigation.</li>
+        <li><span class="ck">›</span>Earn trust with safety and privacy — people give us their night.</li>
+        <li><span class="ck">›</span>Ship the MVP, prove it, then build the native app.</li>
+      </ul>
+      <div class="tie">Serves the why: the magic only lands if it just works.</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="tag f">Turn "I don't know" into an adventure.</div>
+    <div class="site">WanderLoot · wanderloot.com.au</div>
+  </div>
+</div>
