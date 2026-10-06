@@ -83,12 +83,37 @@
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
 
     /* Home nav tiles */
-    .home-nav { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+    .home-nav { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
     .navtile { border: none; border-radius: 18px; padding: 14px 11px; cursor: pointer; color: #fff; text-align: left; box-shadow: 0 8px 20px rgba(35,38,80,0.08); transition: transform .15s; }
     .navtile:active { transform: scale(0.97); }
     .navtile.map { background: linear-gradient(135deg, var(--sky), var(--violet)); }
     .navtile.pass { background: linear-gradient(135deg, var(--mint), var(--sky)); }
     .navtile.rewards { background: linear-gradient(135deg, var(--sun), #ff8b3d); }
+    .navtile.quests { background: linear-gradient(135deg, #7b6cf6, #4db8ff); }
+
+    /* Profile borders (unlocked by location caches) — applied to round avatar elements */
+    .bdr-gold   { box-shadow: 0 0 0 3px var(--sun) !important; }
+    .bdr-mint   { box-shadow: 0 0 0 3px var(--mint) !important; }
+    .bdr-ocean  { box-shadow: 0 0 0 3px #37e2b0, 0 0 0 6px rgba(55,226,176,.3) !important; }
+    .bdr-neon   { box-shadow: 0 0 0 3px #4db8ff, 0 0 12px rgba(77,184,255,.9) !important; }
+    .bdr-flames { box-shadow: 0 0 0 3px #ff6b5c, 0 0 14px rgba(255,107,92,.85) !important; }
+    .bdr-legend { box-shadow: 0 0 0 3px var(--sun), 0 0 18px rgba(255,206,58,.9) !important; animation: legendpulse 1.8s ease-in-out infinite; }
+    @keyframes legendpulse { 0%,100% { box-shadow: 0 0 0 3px var(--sun), 0 0 12px rgba(255,206,58,.7) !important; } 50% { box-shadow: 0 0 0 4px #fff0b3, 0 0 22px rgba(255,206,58,1) !important; } }
+
+    /* Caches & borders screen */
+    .q-h { font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin: 16px 0 8px; }
+    .q-strip { display: flex; gap: 14px; overflow-x: auto; padding: 4px 2px 10px; }
+    .q-bdr { flex: 0 0 auto; text-align: center; width: 64px; }
+    .q-bdr .ring { width: 50px; height: 50px; border-radius: 50%; background: var(--teal); margin: 3px auto 5px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 16px; cursor: pointer; }
+    .q-bdr.locked { opacity: .4; } .q-bdr.locked .ring { cursor: default; }
+    .q-bdr .lab { font-size: 10px; font-weight: 800; color: var(--muted); line-height: 1.1; }
+    .q-bdr.on .lab { color: var(--mint); }
+    .cache { background: var(--panel-2); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 10px; cursor: pointer; }
+    .cache.found { border-color: var(--mint); cursor: default; }
+    .cache h3 { font-family: "Plus Jakarta Sans"; font-size: 16px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .cache .clue { font-size: 13.5px; color: var(--muted); font-style: italic; margin: 6px 0 9px; }
+    .cache .rew { font-size: 12px; font-weight: 800; color: var(--sun); }
+    .hunt { text-align: center; }
     .navtile .t-ico { font-size: 26px; }
     .navtile .t-title { font-family: "Plus Jakarta Sans"; font-weight: 700; font-size: 16px; margin-top: 6px; }
     .navtile .t-sub { font-size: 12px; opacity: 0.95; font-weight: 700; }
@@ -353,6 +378,7 @@
         <button class="navtile map" id="openMap"><div class="t-ico">🗺️</div><div class="t-title">Explorer map</div><div class="t-sub" id="navMapSub">0 discovered</div></button>
         <button class="navtile pass" id="openPassport"><div class="t-ico">🎫</div><div class="t-title">Passport</div><div class="t-sub" id="navPassSub">0 stamps</div></button>
         <button class="navtile rewards" id="openRewards"><div class="t-ico">🏆</div><div class="t-title">Rewards</div><div class="t-sub" id="navRewSub">0 pts</div></button>
+        <button class="navtile quests" id="openQuests"><div class="t-ico">🧭</div><div class="t-title">Caches</div><div class="t-sub" id="navQuestSub">0 found</div></button>
       </div>
 
       <div class="card tiercard">
@@ -480,6 +506,16 @@
         <div class="pass-grid" id="passGrid"></div>
         <button class="btn alt" id="sharePass">Share my passport</button>
         <button class="btn ghost" id="passBack">Back</button>
+      </div>
+    </div>
+
+    <!-- CACHES & BORDERS -->
+    <div id="questsView" class="hidden">
+      <div class="card fade">
+        <div class="vp-h">Caches &amp; borders</div>
+        <p style="color:var(--muted);font-size:14px;font-weight:600;">Hunt real spots around the Gold Coast. Find a cache to unlock a border for your profile.</p>
+        <div id="questsBody"></div>
+        <button class="btn ghost" id="questsBack" style="margin-top:14px;">Back</button>
       </div>
     </div>
 
@@ -656,6 +692,31 @@
   // Rare "golden" finds (variable reward) — ~1 in 5 venues, deterministic
   function isRare(pl) { let h = 0; const n = pl.name || ""; for (let i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) >>> 0; return h % 5 === 0; }
 
+  // Location caches (geocache-style) → unlock profile borders
+  const BORDERS = {
+    none:   { name: "None",           cls: "",           rarity: "—" },
+    mint:   { name: "Mint Halo",      cls: "bdr-mint",   rarity: "Common" },
+    gold:   { name: "Golden Ring",    cls: "bdr-gold",   rarity: "Common" },
+    ocean:  { name: "Ocean Glow",     cls: "bdr-ocean",  rarity: "Rare" },
+    neon:   { name: "Neon Pulse",     cls: "bdr-neon",   rarity: "Rare" },
+    flames: { name: "Trail Flames",   cls: "bdr-flames", rarity: "Epic" },
+    legend: { name: "Legendary Aura", cls: "bdr-legend", rarity: "Legendary" }
+  };
+  const CACHES = [
+    { id: "c1", name: "Surfers Beach Token",   clue: "Between the flags where the surfers gather — look to the sand.",        lat: -28.0025, lng: 153.4309, reward: "mint" },
+    { id: "c2", name: "Skyline Stash",         clue: "Up where the city meets the clouds, the cache waits on high.",          lat: -28.0057, lng: 153.4300, reward: "neon" },
+    { id: "c3", name: "Burleigh Headland Hunt",clue: "Walk the headland track; the ocean guards this one.",                   lat: -28.0920, lng: 153.4560, reward: "ocean" },
+    { id: "c4", name: "Rainforest Cache",      clue: "Follow the gully to the falls — it hides where the water sings.",       lat: -27.9765, lng: 153.1893, reward: "gold" },
+    { id: "c5", name: "Lighthouse Secret",     clue: "Where the point watches the sea, by the old light at the border.",      lat: -28.1650, lng: 153.5520, reward: "flames" },
+    { id: "c6", name: "Legend of the Hinterland", clue: "Deep in the green of the mountain — the rarest find of all.",        lat: -27.9900, lng: 153.1900, reward: "legend" }
+  ];
+  const getFoundCaches = () => LS.get("md_caches", []);
+  function addFoundCache(id) { const c = getFoundCaches(); if (!c.includes(id)) { c.push(id); LS.set("md_caches", c); } }
+  const getBorders = () => LS.get("md_borders", ["none"]);
+  function addBorder(k) { const b = getBorders(); if (!b.includes(k)) { b.push(k); LS.set("md_borders", b); } }
+  const getBorder = () => LS.get("md_border", "none");
+  const setBorder = (k) => LS.set("md_border", k);
+
   // Rewards economy — points buy access & chances, never cash
   const getFreezes = () => LS.get("md_freezes", 0);
   const setFreezes = (n) => LS.set("md_freezes", Math.max(0, n));
@@ -696,7 +757,7 @@
     setTimeout(() => { host.innerHTML = ""; }, 1200);
   }
 
-  const SECTIONS = ["onboard", "setup", "result", "mapView", "passportView", "rewardsView", "venues"];
+  const SECTIONS = ["onboard", "setup", "result", "mapView", "passportView", "rewardsView", "questsView", "venues"];
   function showOnly(id) {
     SECTIONS.forEach(s => document.getElementById(s).classList.add("hidden"));
     document.getElementById(id).classList.remove("hidden");
@@ -735,6 +796,8 @@
       el.style.color = "#fff";
       el.textContent = (p && p.name ? p.name.trim().charAt(0).toUpperCase() : "") || "?";
     }
+    el.classList.remove("bdr-gold", "bdr-mint", "bdr-ocean", "bdr-neon", "bdr-flames", "bdr-legend");
+    try { const c = (BORDERS[getBorder()] || {}).cls; if (c) el.classList.add(c); } catch (e) {}
   }
 
   // Read a photo file, crop to a centred square and shrink it so it fits in local storage.
@@ -806,6 +869,7 @@
     }
     document.getElementById("navMapSub").textContent = discoveredCount() + " discovered";
     document.getElementById("navPassSub").textContent = stampCount() + " stamps";
+    const nq = document.getElementById("navQuestSub"); if (nq) nq.textContent = getFoundCaches().length + " found";
     const rw = document.getElementById("navRewSub"); if (rw) rw.textContent = getPoints() + " pts";
     const sc = getStreak(), strChip = document.getElementById("streakChip");
     if (strChip) { if (sc.count > 0) { strChip.classList.remove("hidden"); document.getElementById("streakN").textContent = sc.count; } else { strChip.classList.add("hidden"); } }
@@ -1273,7 +1337,7 @@
   });
 
   // ============ Navigation ============
-  function backHome() { stopTracking(); stopNav(); refreshChrome(); showOnly("setup"); }
+  function backHome() { stopTracking(); stopNav(); stopHunt(); refreshChrome(); showOnly("setup"); }
   document.getElementById("again").addEventListener("click", backHome);
   document.getElementById("again2").addEventListener("click", backHome);
   document.getElementById("mapBack").addEventListener("click", backHome);
@@ -1288,6 +1352,75 @@
   // ============ Rewards ============
   document.getElementById("rewardsBack").addEventListener("click", backHome);
   document.getElementById("openRewards").addEventListener("click", openRewards);
+
+  // ============ Caches & borders ============
+  let huntWatch = null;
+  function stopHunt() { if (huntWatch != null) { navigator.geolocation.clearWatch(huntWatch); huntWatch = null; } }
+  document.getElementById("openQuests").addEventListener("click", openQuests);
+  document.getElementById("questsBack").addEventListener("click", () => { stopHunt(); backHome(); });
+  function openQuests() {
+    stopHunt(); showOnly("questsView");
+    const found = getFoundCaches(), unlocked = getBorders(), eq = getBorder();
+    let h = '<div class="q-h">Your borders — tap to equip</div><div class="q-strip">';
+    Object.keys(BORDERS).forEach(k => {
+      const b = BORDERS[k], has = (k === "none") || unlocked.includes(k), on = eq === k;
+      h += '<div class="q-bdr ' + (has ? "" : "locked") + (on ? " on" : "") + '">' +
+             '<div class="ring ' + (b.cls || "") + '"' + (has ? ' onclick="equipBorder(\'' + k + '\')"' : "") + '>' + (has ? (on ? "✓" : "") : "🔒") + '</div>' +
+             '<div class="lab">' + b.name + '</div></div>';
+    });
+    h += '</div><div class="q-h">Location caches</div>';
+    CACHES.forEach(c => {
+      const got = found.includes(c.id), b = BORDERS[c.reward];
+      h += '<div class="cache ' + (got ? "found" : "") + '"' + (got ? "" : ' onclick="openHunt(\'' + c.id + '\')"') + '>' +
+             '<h3>' + c.name + ' <span style="font-size:13px;font-weight:800;color:' + (got ? "var(--mint)" : "var(--violet)") + '">' + (got ? "Found ✓" : "🔍 Hunt") + '</span></h3>' +
+             '<div class="clue">"' + c.clue + '"</div>' +
+             '<div class="rew">Reward: ' + b.name + ' border · ' + b.rarity + '</div></div>';
+    });
+    document.getElementById("questsBody").innerHTML = h;
+  }
+  window.openHunt = function (id) {
+    const c = CACHES.find(x => x.id === id); if (!c) return;
+    stopHunt();
+    document.getElementById("questsBody").innerHTML =
+      '<div class="hunt">' +
+        '<div class="kicker" style="color:var(--violet)">Cache hunt</div>' +
+        '<h2 style="font-family:\'Plus Jakarta Sans\';font-size:22px;margin:4px 0 2px">' + c.name + '</h2>' +
+        '<div class="clue" style="color:var(--muted);font-size:14px;font-style:italic;margin-bottom:12px">"' + c.clue + '"</div>' +
+        '<div class="compass"><div class="sonar"><span></span><span></span></div><div class="arrow" id="hArrow">&#8593;</div><div class="compass-label" id="hDir">Finding…</div></div>' +
+        '<div class="distance"><span id="hKm">–</span><small> km away</small></div>' +
+        '<div id="hMsg" class="note" style="margin:8px 0"></div>' +
+        '<button class="btn" id="hFound" disabled>Found it!</button>' +
+        '<button class="btn alt" id="hSim" style="margin-top:8px">Simulate find (demo)</button>' +
+        '<button class="btn ghost" id="hBack" style="margin-top:8px">Back to caches</button>' +
+      '</div>';
+    document.getElementById("hSim").onclick = () => { stopHunt(); foundCache(id); };
+    document.getElementById("hFound").onclick = () => { stopHunt(); foundCache(id); };
+    document.getElementById("hBack").onclick = () => { stopHunt(); openQuests(); };
+    if (navigator.geolocation) {
+      document.getElementById("hMsg").textContent = "Walk toward the cache — 'Found it!' unlocks within 60m.";
+      huntWatch = navigator.geolocation.watchPosition(p => {
+        const pos = [p.coords.latitude, p.coords.longitude], km = haversine(pos, [c.lat, c.lng]);
+        document.getElementById("hKm").textContent = km >= 10 ? km.toFixed(0) : km.toFixed(1);
+        const deg = bearingDeg(pos, [c.lat, c.lng]);
+        document.getElementById("hArrow").style.transform = "rotate(" + deg + "deg)";
+        document.getElementById("hDir").textContent = "Head " + bearingName(deg).toLowerCase();
+        if (km <= 0.06) { document.getElementById("hFound").disabled = false; document.getElementById("hMsg").textContent = "You're here! Tap Found it!"; }
+      }, () => { document.getElementById("hMsg").textContent = "GPS unavailable — use Simulate find to test."; }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 });
+    } else { document.getElementById("hMsg").textContent = "No GPS — use Simulate find to test."; }
+  };
+  function foundCache(id) {
+    const c = CACHES.find(x => x.id === id); if (!c) return;
+    if (getFoundCaches().includes(id)) { openQuests(); return; }
+    const before = tierIndex(getPoints());
+    addFoundCache(id); addBorder(c.reward); addPoints(75);
+    burst(); refreshChrome(); checkTierUp(before);
+    toast("Cache found! Unlocked the " + BORDERS[c.reward].name + " border 🎉");
+    openQuests();
+  }
+  window.equipBorder = function (k) {
+    setBorder(k); refreshChrome(); openQuests();
+    toast(k === "none" ? "Border removed" : "Equipped the " + BORDERS[k].name + " border");
+  };
   function spendRow(ico, title, sub, cost, pts, key) {
     const can = pts >= cost;
     return '<div class="rw-spend"><div class="ico">' + ico + '</div><div class="txt"><b>' + title + '</b><div>' + sub + '</div></div>' +
