@@ -975,11 +975,23 @@
   document.getElementById("city").addEventListener("change", e => state.start = e.target.value.split(",").map(Number));
   document.getElementById("useLoc").addEventListener("click", () => {
     const msg = document.getElementById("locMsg");
-    if (!navigator.geolocation) { msg.textContent = "Geolocation not available."; return; }
-    msg.textContent = "Finding you...";
+    if (!navigator.geolocation) { msg.style.color = ""; msg.textContent = "⚠️ Location isn't available on this device."; return; }
+    if (!window.isSecureContext) { msg.style.color = ""; msg.textContent = "⚠️ Location needs the secure (https) link — not a saved file."; return; }
+    msg.style.color = ""; msg.textContent = "📍 Finding you…";
     navigator.geolocation.getCurrentPosition(
-      p => { state.start = [p.coords.latitude, p.coords.longitude]; msg.textContent = "Using your current location."; },
-      () => { msg.textContent = "Could not get location. Using the selected city."; }
+      p => {
+        state.start = [p.coords.latitude, p.coords.longitude];
+        const acc = Math.round(p.coords.accuracy || 0);
+        msg.style.color = "var(--good)";
+        msg.textContent = "✅ Using your current location" + (acc ? " (±" + acc + "m)" : "") + ".";
+      },
+      err => {
+        msg.style.color = "";
+        if (err.code === 1) msg.textContent = "⚠️ Location permission is off. Allow location for this site in your browser, then tap again. (Using the selected city for now.)";
+        else if (err.code === 3) msg.textContent = "⚠️ Location timed out — try again outside or with better signal. (Using the selected city for now.)";
+        else msg.textContent = "⚠️ Couldn't get your location. (Using the selected city for now.)";
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
     );
   });
 
