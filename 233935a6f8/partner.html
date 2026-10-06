@@ -218,6 +218,10 @@
           <div class="fld"><label>Approx. offer value ($)</label><input id="value" inputmode="numeric" placeholder="30"></div>
         </div>
         <div class="fld"><label>Already advertise deals anywhere? (optional)</label><input id="already" placeholder="e.g. EatClub, Groupon — or leave blank"></div>
+        <div class="fld">
+          <label>Where should guests park? <span style="color:var(--muted);font-weight:600">— we guide drivers straight to it, so they turn up instead of giving up</span></label>
+          <input id="parking" placeholder="e.g. Our free lot off Victoria Ave · Oasis Centre car park (2 min walk) · free street parking on Hinkler Dr">
+        </div>
 
         <div class="terms">
           <b>The simple terms</b>
@@ -299,6 +303,7 @@
       'Redeem-by: '+val('redeemby'),
       'Approx value: $'+(val('value')||'—'),
       'Already advertises: '+(val('already')||'—'),
+      'Guest parking: '+(val('parking')||'—'),
       'Accepted terms: YES'
     ];
     const body = lines.join('\n');

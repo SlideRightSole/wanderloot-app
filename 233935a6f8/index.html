@@ -190,6 +190,7 @@
     .v-code { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-weight: 700; font-size: 13px; color: var(--muted); }
     .v-code span { display: block; font-family: "Plus Jakarta Sans"; font-size: 26px; letter-spacing: 3px; color: var(--sun); margin-top: 6px; }
     .novoucher { background: var(--panel-2); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin: 16px 0; color: var(--muted); font-size: 14px; }
+    .parkline { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 11px 14px; margin: 4px 0 14px; font-size: 13.5px; color: var(--text); }
     a.gmaps { display: inline-block; background: var(--good); color: #05271a; text-decoration: none; font-weight: 800; padding: 12px 20px; border-radius: 12px; margin-top: 6px; }
     .arrive-progress { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 11px; margin: 14px 0 4px; font-size: 13px; color: var(--muted); font-weight: 700; }
     .mockrow { display: flex; gap: 8px; margin-top: 10px; }
@@ -680,6 +681,29 @@
     { name: "Cleland Wildlife Park", lat: -34.9660, lng: 138.6960, cat: "entertainment", budget: 2, hint: "Walk among kangaroos and hold a koala." }
   ];
 
+  // ============ Parking guidance (captured per partner at onboarding) ============
+  // Drivers are routed to PARKING first, then a short walk reveals the venue — keeps the mystery
+  // AND solves "where do I park". lat/lng = where to park; desc = what to tell the guest; diff = easy|moderate|hard.
+  const PARKING = {
+    // Gold Coast (commercial launch — driving market)
+    "Broadbeach Woodfired Kitchen, Broadbeach": { lat: -28.0311, lng: 153.4289, desc: "Oasis Centre car park, Victoria Ave — free 3 hrs", diff: "easy" },
+    "Palm Beach Espresso, Palm Beach":           { lat: -28.1159, lng: 153.4661, desc: "Free street parking on Nineteenth Ave", diff: "easy" },
+    "Currumbin Beach Grill, Currumbin":          { lat: -28.1341, lng: 153.4831, desc: "Currumbin Beach car park off Pacific Pde — free", diff: "easy" },
+    "Surfers Ramen House, Surfers Paradise":     { lat: -28.0009, lng: 153.4289, desc: "Bruce Bishop car park, Beach Rd — paid", diff: "moderate" },
+    "Miami Marketta Street Food, Miami":         { lat: -28.0691, lng: 153.4401, desc: "Free parking on Hinkler Dr + overflow lot", diff: "moderate" },
+    "Putt Planet Mini Golf, Nerang":             { lat: -27.9909, lng: 153.3390, desc: "Free on-site car park", diff: "easy" },
+    "Skyline Ropes Adventure, Nerang":           { lat: -27.9941, lng: 153.3461, desc: "Free gravel car park at the trailhead", diff: "easy" },
+    "Pixel Arcade, Surfers Paradise":            { lat: -28.0041, lng: 153.4280, desc: "Bruce Bishop car park (2 min walk)", diff: "moderate" },
+    "The Sandbar Rooftop, Surfers Paradise":     { lat: -28.0021, lng: 153.4326, desc: "Bruce Bishop car park, or valet at the door", diff: "moderate" },
+    "Miami Public House, Miami":                 { lat: -28.0689, lng: 153.4431, desc: "Free street parking on Mountain View Ave", diff: "easy" },
+    "Neon Reef Nightclub, Surfers Paradise":     { lat: -28.0046, lng: 153.4311, desc: "Bruce Bishop car park (paid after 6pm)", diff: "moderate" },
+    // Sydney (beta test venues)
+    "Harbourside Woodfired Pizza, Balmain":      { lat: -33.8601, lng: 151.1799, desc: "Free 2-hr street parking on Darling St", diff: "moderate" },
+    "Cliffside Bar & Grill, Coogee":             { lat: -33.9221, lng: 151.2559, desc: "Goldstein Reserve car park, Arden St — paid", diff: "moderate" },
+    "Glow Mini Golf, Alexandria":                { lat: -33.9089, lng: 151.1951, desc: "Free on-site customer parking", diff: "easy" }
+  };
+  Object.keys(PARKING).forEach(n => { const v = PLACES.find(p => p.name === n); if (v) v.park = PARKING[n]; });
+
   // Partners set "Active" in the WanderLoot ops dashboard (same browser/origin) go live here automatically.
   try {
     const live = JSON.parse(localStorage.getItem("wl_live_partners") || "[]");
@@ -705,7 +729,12 @@
     drive: [ {v:20,t:"30 min",s:"~20 km"}, {v:55,t:"1 hour",s:"~55 km",sel:1}, {v:120,t:"2 hours",s:"~120 km"}, {v:250,t:"Half day",s:"~250 km"}, {v:600,t:"No limit",s:"Go far"} ],
     walk:  [ {v:0.5,t:"5 min",s:"~500 m"}, {v:1,t:"10 min",s:"~1 km",sel:1}, {v:1.6,t:"20 min",s:"~1.5 km"}, {v:2.5,t:"30 min",s:"~2.5 km"}, {v:5,t:"1 hour",s:"~5 km"} ]
   };
-  let chosen, umap, umarker, emap, watchId = null, demoTimer = null, arrived = false, premiumActive = false;
+  let chosen, umap, umarker, emap, watchId = null, demoTimer = null, arrived = false, premiumActive = false, parked = false;
+  // ===== Parking leg helpers (drivers park near, then walk the reveal) =====
+  function parkInfo() { return (chosen && state.mode !== "walk" && chosen.park && chosen.park.lat != null) ? chosen.park : null; }
+  function parkPt() { const p = parkInfo(); return p ? [p.lat, p.lng] : null; }
+  function hasParkLeg() { const pp = parkPt(); return !!pp && haversine(pp, [chosen.lat, chosen.lng]) > 0.03; } // only if a real walk (>30m)
+  function activeTarget() { return (hasParkLeg() && !parked) ? parkPt() : [chosen.lat, chosen.lng]; } // drive→parking, then walk→venue
 
   const LS = {
     get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } },
@@ -1051,13 +1080,13 @@
     showOnly("result");
     document.getElementById("driveCard").classList.remove("hidden");
     document.getElementById("arriveCard").classList.add("hidden");
-    stopTracking(); arrived = false;
+    stopTracking(); arrived = false; parked = false;
     const m = MODE[state.mode];
     const roadKm = haversine(state.start, [chosen.lat, chosen.lng]) * m.factor;
     document.getElementById("eta").textContent = Math.round(roadKm / m.speed * 60) + " min";
     document.getElementById("driveKicker").textContent = (premiumActive ? "⭐ Premium mystery " : "Mystery ") + m.verb + " underway";
     document.getElementById("etaLabel").textContent = "est. " + m.verb;
-    document.getElementById("liveBtn").textContent = "Start live " + m.verb + " (use my GPS)";
+    const _lb = document.getElementById("liveBtn"); _lb.textContent = "Start live " + m.verb + " (use my GPS)"; _lb.classList.remove("alt");
     document.getElementById("catV").textContent = catName[chosen.cat] || "Surprise";
     document.getElementById("hint").innerHTML = "<b>Clue:</b> " + chosen.hint;
     // reward value chip: show the value, never the offer or category (keeps the mystery)
@@ -1072,16 +1101,20 @@
     drawUserMap(state.start);
   }
   function updateDistance(pos) {
-    const roadKm = haversine(pos, [chosen.lat, chosen.lng]) * MODE[state.mode].factor;
-    document.getElementById("km").textContent = roadKm >= 10 ? roadKm.toFixed(0) : roadKm.toFixed(1);
+    const tgt = activeTarget();
+    const walk = parked; // once parked the last leg is on foot
+    const roadKm = haversine(pos, tgt) * (walk ? 1 : MODE[state.mode].factor);
+    const km = document.getElementById("km");
+    if (walk) { const mtr = Math.max(0, Math.round(haversine(pos, tgt) * 1000)); km.textContent = mtr; if (km.nextElementSibling) km.nextElementSibling.textContent = " m to walk"; }
+    else { km.textContent = roadKm >= 10 ? roadKm.toFixed(0) : roadKm.toFixed(1); if (km.nextElementSibling) km.nextElementSibling.textContent = " km to go"; }
   }
   function setArrow(pos) {
-    const deg = bearingDeg(pos, [chosen.lat, chosen.lng]);
+    const deg = bearingDeg(pos, activeTarget());
     document.getElementById("arrow").style.transform = "rotate(" + deg + "deg)";
-    document.getElementById("dir").textContent = "Head " + bearingName(deg).toLowerCase();
+    document.getElementById("dir").textContent = (parked ? "Walk " : "Head ") + bearingName(deg).toLowerCase();
   }
   function setPulse(pos) {
-    const remain = haversine(pos, [chosen.lat, chosen.lng]);
+    const remain = haversine(pos, activeTarget());
     const pulse = (0.5 + Math.min(remain, 40) / 40 * 2.1).toFixed(2) + "s";
     document.getElementById("driveCard").style.setProperty("--pulse", pulse);
   }
@@ -1096,8 +1129,30 @@
   function updateProgress(pos) {
     updateDistance(pos); setArrow(pos); setPulse(pos);
     if (umap && umarker) { umarker.setLatLng(pos); umap.panTo(pos, { animate: true }); }
-    if (navMode) { if (pendingNav) { pendingNav = false; startNav(pos); } else updateNav(pos); }
-    if (haversine(pos, [chosen.lat, chosen.lng]) <= 0.15) arrive();
+    // Turn-by-turn voice only while driving (not during the final walk from the car)
+    if (navMode && !parked) { if (pendingNav) { pendingNav = false; startNav(pos); } else updateNav(pos); }
+    // Stage 1: arrive at parking → hand off to the walk. Stage 2: reach the venue on foot → reveal.
+    if (hasParkLeg() && !parked) {
+      if (haversine(pos, parkPt()) <= 0.12) enterParkPhase(pos);
+      return;
+    }
+    if (haversine(pos, [chosen.lat, chosen.lng]) <= (parked ? 0.035 : 0.15)) arrive();
+  }
+  function enterParkPhase(pos) {
+    parked = true; stopNav();
+    const p = parkInfo();
+    try { navigator.vibrate && navigator.vibrate([30, 60, 30]); } catch (e) {}
+    speak("You've arrived near your mystery spot. Park here, then follow the walk to your reward.");
+    document.getElementById("driveKicker").textContent = "🅿️ Park here — then walk to your reward";
+    document.getElementById("etaLabel").textContent = "on foot";
+    const rc = document.getElementById("rewardChip");
+    rc.innerHTML = '<div class="rc-ico">🅿️</div><div>' + (p && p.desc ? p.desc : "Park in any available spot nearby") +
+                   '<div class="rc-sub">Your mystery reward is a short walk from here</div></div>';
+    document.getElementById("hint").innerHTML = "<b>On foot now:</b> follow the compass — it reveals within 35 m.";
+    const lb = document.getElementById("liveBtn");
+    lb.textContent = "I'm at the door — reveal now"; lb.classList.add("alt");
+    document.getElementById("driveMsg").textContent = "Parked? Walk the last bit hands-free — it unwraps as you reach the door.";
+    updateDistance(pos); setArrow(pos); setPulse(pos);
   }
   function stopTracking() {
     if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
@@ -1159,7 +1214,7 @@
     return await (await fetch(osrm)).json();
   }
   async function startNav(pos) {
-    const dest = [chosen.lat, chosen.lng];
+    const dest = activeTarget(); // route to parking first when the venue has a park leg
     try {
       const j = await fetchRoute(pos, dest);
       if (!j.routes || !j.routes.length) { navOn = false; document.getElementById("driveMsg").textContent = "No road route found — using the compass instead."; return; }
@@ -1283,6 +1338,9 @@
               '</div>';
     } else {
       html += '<div class="novoucher">A free local gem. No voucher here, just somewhere worth the drive.</div>';
+    }
+    if (chosen.park && chosen.park.desc && state.mode !== "walk") {
+      html += '<div class="parkline">🅿️ <b>Parking:</b> ' + chosen.park.desc + '</div>';
     }
     html += '<a class="gmaps" href="' + gmaps + '" target="_blank" rel="noopener">Open in Google Maps</a>';
     html += '<div class="arrive-progress" id="arriveProgress"></div>';
@@ -1459,6 +1517,7 @@
 
   // ============ Live + demo drive ============
   document.getElementById("liveBtn").addEventListener("click", () => {
+    if (parked) { arrive(); return; } // "I'm at the door — reveal now" fallback on the walk leg
     const msg = document.getElementById("driveMsg");
     if (!navigator.geolocation) { msg.textContent = "GPS is not available."; return; }
     stopTracking();
@@ -1475,13 +1534,20 @@
     );
   });
   document.getElementById("demoBtn").addEventListener("click", () => {
-    stopTracking(); stopNav(); arrived = false;
+    stopTracking(); stopNav(); arrived = false; parked = false;
     document.getElementById("driveMsg").textContent = "Demo drive running. Watch it count down to the reveal.";
-    const start = state.start, dest = [chosen.lat, chosen.lng];
-    let t = 0; const steps = 60;
+    const start = state.start, venue = [chosen.lat, chosen.lng];
+    // If this venue has a park leg, drive to parking (first ~75%), then walk to the venue (last ~25%).
+    const pk = hasParkLeg() ? parkPt() : null;
+    const lerp = (a, b, f) => [a[0] + (b[0]-a[0])*f, a[1] + (b[1]-a[1])*f];
+    let t = 0; const steps = 64, split = pk ? 46 : steps;
     demoTimer = setInterval(() => {
-      t++; const f = t / steps;
-      updateProgress([ start[0] + (dest[0]-start[0])*f, start[1] + (dest[1]-start[1])*f ]);
+      t++;
+      let pos;
+      if (pk && t <= split) pos = lerp(start, pk, t / split);
+      else if (pk) pos = lerp(pk, venue, (t - split) / (steps - split));
+      else pos = lerp(start, venue, t / steps);
+      updateProgress(pos);
       if (t >= steps) { clearInterval(demoTimer); demoTimer = null; }
     }, 100);
   });

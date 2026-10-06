@@ -149,6 +149,7 @@
       <div class="fld"><label>Est. value ($)</label><input id="mValue" type="number" placeholder="30"></div>
       <div class="fld"><label>Source</label><select id="mSource"></select></div>
     </div>
+    <div class="fld"><label>Guest parking (shown to drivers on arrival)</label><input id="mParking" placeholder="e.g. Oasis Centre car park, Victoria Ave — free 3 hrs"></div>
     <div class="modal-actions">
       <button class="btn ghost" id="mCancel">Cancel</button>
       <button class="btn" id="mSave">Save business</button>
@@ -363,7 +364,8 @@
     const live = partners.filter(p=>p.status==="active" && p.lat!=null).map(p=>({
       name:p.name, lat:p.lat, lng:p.lng, cat:CATMAP[p.sector]||"eat",
       budget: p.value>60?3:p.value>30?2:1, tier:"priority", offer:p.offer, value:p.value,
-      closes:"9:00pm", adult:p.sector==="nightlife", hint:"A WanderLoot partner in "+p.suburb+".", live:true
+      closes:"9:00pm", adult:p.sector==="nightlife", hint:"A WanderLoot partner in "+p.suburb+".", live:true,
+      park: p.parking ? { desc: p.parking } : undefined
     }));
     localStorage.setItem("wl_live_partners", JSON.stringify(live));
   }
@@ -490,7 +492,7 @@
 
   window.openAdd = ()=>{ editId=null; document.getElementById("modalTitle").textContent="Add a business";
     document.getElementById("mName").value=""; document.getElementById("mSuburb").value=""; document.getElementById("mPhone").value="";
-    document.getElementById("mOffer").value=""; document.getElementById("mValue").value="";
+    document.getElementById("mOffer").value=""; document.getElementById("mValue").value=""; document.getElementById("mParking").value="";
     document.getElementById("mSector").value=SECTORS[0].k; document.getElementById("mStatus").value="lead"; document.getElementById("mSource").value=SOURCES[0];
     document.getElementById("mDeal").innerHTML=""; document.getElementById("mSave").textContent="Save business"; document.getElementById("modal").classList.add("on"); };
   const dash=s=> (s&&s!=="—")?s:"";
@@ -499,6 +501,7 @@
     document.getElementById("mName").value=p.name;
     document.getElementById("mSuburb").value=dash(p.suburb); document.getElementById("mPhone").value=dash(p.phone);
     document.getElementById("mOffer").value=dash(p.offer); document.getElementById("mValue").value=p.value||"";
+    document.getElementById("mParking").value=dash(p.parking);
     document.getElementById("mSector").value=p.sector; document.getElementById("mStatus").value=p.status;
     document.getElementById("mSource").value=p.source||SOURCES[0];
     document.getElementById("mDeal").innerHTML = isWarm(p) ? `Currently advertises on <b>${p.source}</b> — `+dealLink(p,"see their live deal") : "";
@@ -512,7 +515,7 @@
       sector:document.getElementById("mSector").value, suburb:document.getElementById("mSuburb").value.trim()||"—",
       phone:document.getElementById("mPhone").value.trim()||"—", status:document.getElementById("mStatus").value,
       offer:document.getElementById("mOffer").value.trim()||"—", value:+document.getElementById("mValue").value||0,
-      source:document.getElementById("mSource").value };
+      parking:document.getElementById("mParking").value.trim()||"", source:document.getElementById("mSource").value };
     if(editId!=null){ const p=partners.find(x=>x.id===editId); if(p) Object.assign(p,fields); save(); document.getElementById("modal").classList.remove("on"); render(); toast(name+" updated"); }
     else { partners.unshift({ id:Math.max(0,...partners.map(p=>p.id))+1, ...fields, redemptions:0 }); save(); document.getElementById("modal").classList.remove("on"); render(); toast(name+" added"); }
   };
