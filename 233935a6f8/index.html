@@ -90,6 +90,8 @@
     .navtile.pass { background: linear-gradient(135deg, var(--mint), var(--sky)); }
     .navtile.rewards { background: linear-gradient(135deg, var(--sun), #ff8b3d); }
     .navtile.quests { background: linear-gradient(135deg, #7b6cf6, #4db8ff); }
+    .loot-banner { background: linear-gradient(135deg, var(--sun), #ff8b3d); color: #3a2400; border-radius: 14px; padding: 12px 15px; margin-bottom: 12px; font-weight: 800; font-size: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px; box-shadow: 0 6px 16px rgba(224,160,28,.3); }
+    .loot-banner span { font-size: 20px; }
 
     /* Profile borders (unlocked by location caches) — applied to round avatar elements */
     .bdr-gold,.bdr-mint,.bdr-ocean,.bdr-neon,.bdr-flames,.bdr-legend,.bdr-royal,.bdr-sunset { position: relative; overflow: visible !important; }
@@ -388,6 +390,7 @@
 
     <!-- HOME / SETUP -->
     <div id="setup" class="hidden">
+      <div id="lootBanner" class="loot-banner hidden"></div>
       <div class="home-nav">
         <button class="navtile map" id="openMap"><div class="t-ico">🗺️</div><div class="t-title">Explorer map</div><div class="t-sub" id="navMapSub">0 discovered</div></button>
         <button class="navtile pass" id="openPassport"><div class="t-ico">🎫</div><div class="t-title">Passport</div><div class="t-sub" id="navPassSub">0 stamps</div></button>
@@ -892,6 +895,8 @@
     document.getElementById("navMapSub").textContent = discoveredCount() + " discovered";
     document.getElementById("navPassSub").textContent = stampCount() + " stamps";
     const nq = document.getElementById("navQuestSub"); if (nq) nq.textContent = getFoundCaches().length + " found";
+    const lb = document.getElementById("lootBanner");
+    if (lb) { const a = activeLoot(); if (a.length) { const soon = Math.min(...a.map(x => lootDaysLeft(x.at))); lb.classList.remove("hidden"); lb.innerHTML = "💰 " + a.length + " loot reward" + (a.length > 1 ? "s" : "") + " waiting · expires in " + soon + "d <span>›</span>"; } else lb.classList.add("hidden"); }
     const rw = document.getElementById("navRewSub"); if (rw) rw.textContent = getPoints() + " pts";
     const sc = getStreak(), strChip = document.getElementById("streakChip");
     if (strChip) { if (sc.count > 0) { strChip.classList.remove("hidden"); document.getElementById("streakN").textContent = sc.count; } else { strChip.classList.add("hidden"); } }
@@ -1236,7 +1241,16 @@
     animateIn(box, "catch-pop"); refreshChrome();
     window.scrollTo(0, 0);
   }
-  // "More loot near here" — locked nearby partners the user can unlock (paid in the real app)
+  // "More loot near here" — locked nearby partners. Unlock with a credit ($5 = 5 local unlocks).
+  // Unlocked loot stays claimable for 7 days — a re-engagement window.
+  const LOOT_DAYS = 7;
+  const getUnlocks = () => LS.get("md_unlocks", 0);
+  const setUnlocks = (n) => LS.set("md_unlocks", Math.max(0, n));
+  const getUnlocked = () => LS.get("md_unlocked", []);
+  function addUnlocked(venues) { const u = getUnlocked(), now = Date.now(); venues.forEach(v => { if (!u.some(x => x.name === v.name)) u.push({ name: v.name, offer: v.offer, cat: v.cat, lat: v.lat, lng: v.lng, at: now }); }); LS.set("md_unlocked", u); }
+  function activeLoot() { const cut = Date.now() - LOOT_DAYS * 86400000; return getUnlocked().filter(x => x.at > cut && !getRedeemed().includes(x.name)); }
+  const lootActive = (name) => activeLoot().some(x => x.name === name);
+  const lootDaysLeft = (at) => Math.max(0, Math.ceil((at + LOOT_DAYS * 86400000 - Date.now()) / 86400000));
   let areaUnlocked = false;
   function nearbyLoot() {
     return PLACES.filter(p => p.name !== chosen.name && p.offer)
@@ -1249,16 +1263,25 @@
     let h = '<div class="nearby" id="nearbyBox"><div class="nb-h">💰 More loot near here</div>';
     n.forEach(p => {
       const soc = '<div class="nb-soc">🧑 ' + looterCount(p.name) + ' Looters unwrapped this</div>';
-      if (areaUnlocked) h += '<div class="nb-item open"><div class="nb-name">' + p.name.split(",")[0] + '</div><div class="nb-sub">' + p.offer + '</div>' + soc + '</div>';
+      if (areaUnlocked || lootActive(p.name)) h += '<div class="nb-item open"><div class="nb-name">' + p.name.split(",")[0] + '</div><div class="nb-sub">' + p.offer + '</div>' + soc + '</div>';
       else h += '<div class="nb-item"><div class="nb-name blur">' + p.name.split(",")[0] + '</div><div class="nb-sub">🔒 Hidden ' + (catName[p.cat] || "spot") + ' reward</div>' + soc + '</div>';
     });
-    if (!areaUnlocked) h += '<button class="btn alt" id="unlockArea" style="width:100%;margin-top:10px">Unlock nearby loot · $1</button>';
+    if (!areaUnlocked) { const cr = getUnlocks(); h += '<button class="btn alt" id="unlockArea" style="width:100%;margin-top:10px">' + (cr > 0 ? ("Unlock this area · " + cr + " unlock" + (cr > 1 ? "s" : "") + " left") : "Get 5 local unlocks · $5") + '</button>'; }
     h += '</div>';
     return h;
   }
   function wireNearbyLoot() {
     const b = document.getElementById("unlockArea");
-    if (b) b.onclick = () => { areaUnlocked = true; burst(); toast("Nearby loot unlocked! 💰"); const el = document.getElementById("nearbyBox"); if (el) el.outerHTML = renderNearbyLoot(); };
+    if (!b) return;
+    b.onclick = () => {
+      let cr = getUnlocks();
+      if (cr <= 0) { setUnlocks(5); cr = 5; toast("5 local unlocks added · $5 💰"); } // demo "payment"
+      setUnlocks(cr - 1);
+      areaUnlocked = true; addUnlocked(nearbyLoot()); burst();
+      toast("Unlocked for " + LOOT_DAYS + " days — come back anytime! (" + getUnlocks() + " left)");
+      const el = document.getElementById("nearbyBox"); if (el) el.outerHTML = renderNearbyLoot();
+      refreshChrome();
+    };
   }
   function updateArriveProgress(newArea) {
     const el = document.getElementById("arriveProgress");
@@ -1405,6 +1428,18 @@
   let huntWatch = null;
   function stopHunt() { if (huntWatch != null) { navigator.geolocation.clearWatch(huntWatch); huntWatch = null; } }
   document.getElementById("openQuests").addEventListener("click", openQuests);
+  document.getElementById("lootBanner").addEventListener("click", openLootBag);
+  function openLootBag() {
+    const a = activeLoot();
+    const ov = document.createElement("div"); ov.className = "share-ov"; ov.id = "lootOv";
+    let h = '<div class="share-card" style="background:linear-gradient(165deg,#0f8f77,#0a6b58)"><div class="sc-top">💰 Your awaiting loot</div>';
+    if (!a.length) h += '<div style="color:#bfeee0;margin-top:14px;font-weight:600">No loot waiting — unlock some on your next mystery!</div>';
+    a.forEach(x => { h += '<div style="background:rgba(255,255,255,.1);border-radius:12px;padding:12px;margin-top:10px;text-align:left"><div style="font-weight:800">' + x.name.split(",")[0] + '</div><div style="font-size:13px;color:#eafff8;margin-top:1px">' + x.offer + '</div><div style="font-size:11px;color:#ffd873;font-weight:800;margin-top:5px">⏳ Expires in ' + lootDaysLeft(x.at) + ' days</div></div>'; });
+    h += '</div><div class="share-actions"><button class="btn" id="lootClose">Close</button></div><div class="sc-hint">Come back within 7 days to claim these at the venue.</div>';
+    ov.innerHTML = h; document.body.appendChild(ov);
+    document.getElementById("lootClose").onclick = () => ov.remove();
+    ov.addEventListener("click", e => { if (e.target === ov) ov.remove(); });
+  }
   document.getElementById("questsBack").addEventListener("click", () => { stopHunt(); backHome(); });
   function openQuests() {
     stopHunt(); showOnly("questsView");
