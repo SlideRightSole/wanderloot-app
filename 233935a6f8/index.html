@@ -330,6 +330,12 @@
     .nb-lock{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; background:rgba(8,18,24,.34); color:#fff; text-align:center; padding:12px; pointer-events:none; }
     .nb-lock .nl-ico{ font-size:28px; } .nb-lock .nl-t{ font-weight:800; font-size:14.5px; } .nb-lock .nl-s{ font-size:12px; opacity:.92; }
     .nb-pin{ font-size:20px; line-height:26px; text-align:center; filter:drop-shadow(0 2px 4px rgba(0,0,0,.45)); }
+    /* dietary sign-up popup */
+    .sc-sub{ font-size:13px; color:rgba(255,255,255,.85); text-align:center; margin:-2px 0 14px; padding:0 6px; }
+    .diet-pop-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .diet-pop{ background:rgba(255,255,255,.14); border:2px solid rgba(255,255,255,.32); border-radius:14px; padding:14px 10px; font-weight:800; font-size:14.5px; color:#fff; cursor:pointer; font-family:inherit; transition:transform .1s; }
+    .diet-pop:active{ transform:scale(.96); }
+    .diet-pop.on{ background:#fff; color:#0c3a2e; border-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.35); }
     .rw-lead{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:13px; }
     .rw-lead .row{ display:flex; justify-content:space-between; font-size:13.5px; padding:5px 0; border-bottom:1px solid var(--line); }
     .rw-lead .row:last-child{ border:none; } .rw-lead .row b{ font-weight:800; }
@@ -606,17 +612,6 @@
       </div>
 
       <div class="card">
-        <div class="label">Any dietary needs? <span style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0">— optional, tap any that apply</span></div>
-        <div class="grid" id="dietOpts">
-          <div class="opt diet" data-v="veg">🥗 Vegetarian</div>
-          <div class="opt diet" data-v="vegan">🌱 Vegan</div>
-          <div class="opt diet" data-v="halal">☪️ Halal</div>
-          <div class="opt diet" data-v="gf">🌾 Gluten-free</div>
-        </div>
-        <div class="note" style="margin-top:8px">We'll only send you to food spots that cater to these — the mystery stays intact.</div>
-      </div>
-
-      <div class="card">
         <div class="label">What are you in the mood for?</div>
         <div class="grid grid-3" id="catOpts">
           <div class="opt sel" data-v="surprise"><span class="emoji">🎲</span>Surprise me</div>
@@ -633,7 +628,7 @@
 
       <button class="btn" id="go">Wander Out to a Mystery</button>
       <div id="setupErr" class="err"></div>
-      <div class="note"><a id="openVenues" style="color:var(--muted);text-decoration:underline;cursor:pointer;">Own a venue? See how it works</a></div>
+      <div class="note"><a id="editDiet" style="color:var(--muted);text-decoration:underline;cursor:pointer;">🥗 Dietary needs</a> &nbsp;·&nbsp; <a id="openVenues" style="color:var(--muted);text-decoration:underline;cursor:pointer;">Own a venue?</a></div>
       <!-- TEMP preview button — remove before launch -->
       <div style="text-align:center;margin-top:22px;"><a id="previewIntro" style="color:var(--muted);text-decoration:underline;cursor:pointer;font-size:12px;opacity:.7;">👀 Preview intro (temp)</a></div>
     </div>
@@ -1216,6 +1211,26 @@
     });
   });
 
+  // ============ Dietary needs (captured at sign-up, stored on profile) ============
+  const getDiets = () => LS.get("md_diets", []);
+  const setDiets = (arr) => LS.set("md_diets", arr);
+  const DIET_OPTS = [["veg", "🥗 Vegetarian"], ["vegan", "🌱 Vegan"], ["halal", "☪️ Halal"], ["gf", "🌾 Gluten-free"]];
+  function openDietPopup(onDone) {
+    const sel = new Set(getDiets());
+    const ov = document.createElement("div"); ov.className = "share-ov"; ov.id = "dietOv";
+    const chips = DIET_OPTS.map(([v, l]) => '<button class="diet-pop' + (sel.has(v) ? ' on' : '') + '" data-v="' + v + '">' + l + '</button>').join("");
+    ov.innerHTML = '<div class="share-card"><div class="sc-top">🥗 Any dietary needs?</div>' +
+      '<div class="sc-sub">We\'ll only ever send you to food spots that cater to these. Change it anytime.</div>' +
+      '<div class="diet-pop-grid">' + chips + '</div></div>' +
+      '<div class="share-actions"><button class="btn" id="dietSave">Save</button><button class="btn ghost" id="dietSkip">No needs</button></div>';
+    document.body.appendChild(ov);
+    ov.querySelectorAll(".diet-pop").forEach(b => b.onclick = () => { const v = b.dataset.v; if (sel.has(v)) { sel.delete(v); b.classList.remove("on"); } else { sel.add(v); b.classList.add("on"); } });
+    const finish = (arr) => { setDiets(arr); state.diets = arr.slice(); refreshChrome(); ov.remove(); if (onDone) onDone(); };
+    document.getElementById("dietSave").onclick = () => finish([...sel]);
+    document.getElementById("dietSkip").onclick = () => finish([]);
+    ov.addEventListener("click", e => { if (e.target === ov) finish([...sel]); });
+  }
+
   // ============ First-run intro carousel ============
   let introIdx = 0;
   function introSlides() { return document.querySelectorAll("#introTrack .slide"); }
@@ -1241,6 +1256,7 @@
     setIntroDot(i);
   }
   function finishIntro() { LS.set("md_introseen", true); if (getProfile()) { refreshChrome(); showOnly("setup"); } else openOnboard(false); }
+  { const ed = document.getElementById("editDiet"); if (ed) ed.addEventListener("click", () => openDietPopup(null)); }
   // TEMP preview button — remove before launch
   { const pv = document.getElementById("previewIntro"); if (pv) pv.addEventListener("click", openIntro); }
   document.getElementById("introNext").addEventListener("click", () => {
@@ -1283,9 +1299,9 @@
     LS.set("md_agreed", true);
     if (firstTime && !LS.get("md_welcomed", false)) { LS.set("md_welcomed", true); addPoints(30); bumpStreak(); } // endowed progress
     refreshChrome();
-    showOnly("setup");
-    applyTestTarget();
-    toast(firstTime ? "Welcome, " + draft.name + "! +30 pts to start you off 🎉" : "Profile updated");
+    const land = () => { showOnly("setup"); applyTestTarget(); toast(firstTime ? "Welcome, " + draft.name + "! +30 pts to start you off 🎉" : "Profile updated"); };
+    if (firstTime) openDietPopup(land); // ask dietary needs as the final sign-up step
+    else land();
   });
   document.getElementById("termsLink").addEventListener("click", e => { e.preventDefault(); toast("Full Terms & safety policy: wanderloot.com.au/terms"); });
   document.getElementById("avatarChip").addEventListener("click", openOnboard);
@@ -1362,12 +1378,7 @@
   wireOpts("budgetOpts", "budget", Number);
   wireOpts("catOpts", "cat");
   wireOpts("partyOpts", "party");
-  // Dietary needs — multi-select toggles
-  document.querySelectorAll("#dietOpts .opt").forEach(el => el.addEventListener("click", () => {
-    const v = el.dataset.v, on = el.classList.toggle("sel");
-    if (on) { if (!state.diets.includes(v)) state.diets.push(v); }
-    else state.diets = state.diets.filter(d => d !== v);
-  }));
+  // Dietary needs are captured at sign-up (popup) and stored on the profile — see openDietPopup().
   // 18+ acknowledgement when adults selected (placeholder for a real age gate)
   document.querySelector('#partyOpts .opt[data-v="adults"]').addEventListener("click", () => {
     if (!LS.get("md_over18", false)) { LS.set("md_over18", true); toast("18+ confirmed — adult venues unlocked."); }
@@ -2254,6 +2265,7 @@
   }
 
   // ============ Boot ============
+  state.diets = getDiets(); // apply saved dietary needs to every mystery
   refreshChrome();
   if (getProfile()) { showOnly("setup"); applyTestTarget(); }
   else if (!LS.get("md_introseen", false)) { openIntro(); }
