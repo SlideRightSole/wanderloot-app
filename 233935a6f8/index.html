@@ -616,7 +616,7 @@
           <div class="opt" data-v="culture"><span class="emoji">🎨</span>Culture</div>
           <div class="opt" data-v="wildlife"><span class="emoji">🐨</span>Wildlife</div>
           <div class="opt" data-v="entertainment"><span class="emoji">🎡</span>Do stuff</div>
-          <div class="opt" data-v="market"><span class="emoji">🛍️</span>Markets</div>
+          <div class="opt" data-v="cafe"><span class="emoji">☕</span>Cafe</div>
         </div>
       </div>
 
@@ -924,9 +924,8 @@
     // culture
     "HOTA Gallery, Bundall": "culture", "Questacon, Parkes": "culture", "Australian War Memorial, Campbell": "culture",
     "Mount Stromlo Observatory, Weston Creek": "culture", "Berkelouw Book Barn, Berrima": "culture",
-    // markets
-    "Miami Marketta Street Food, Miami": "market", "Parramatta Night Markets": "market",
-    "Fremantle Markets": "market", "Spice Alley, Chippendale": "market", "Hahndorf, Adelaide Hills": "market"
+    // cafés (coffee-first spots)
+    "The Lane Espresso, Surry Hills": "cafe", "Palm Beach Espresso, Palm Beach": "cafe", "The Grounds of Alexandria": "cafe"
   };
   Object.keys(RECAT).forEach(n => { const v = PLACES.find(p => p.name === n); if (v) v.cat = RECAT[n]; });
 
@@ -936,8 +935,8 @@
     if (Array.isArray(live)) live.forEach(v => { if (v && v.name && v.lat != null && !PLACES.some(p => p.name === v.name)) PLACES.push(v); });
   } catch (e) {}
 
-  const catName = { surprise:"Surprise", nature:"Nature", sightsee:"Sightsee", eat:"Eat & drink", entertainment:"Do stuff", beach:"Beach", culture:"Culture", wildlife:"Wildlife", market:"Markets", nightlife:"Nightlife" };
-  const catEmoji = { surprise:"🎲", nature:"🌿", sightsee:"📸", eat:"🍽️", entertainment:"🎡", beach:"🏖️", culture:"🎨", wildlife:"🐨", market:"🛍️", nightlife:"🍸" };
+  const catName = { surprise:"Surprise", nature:"Nature", sightsee:"Sightsee", eat:"Eat & drink", entertainment:"Do stuff", beach:"Beach", culture:"Culture", wildlife:"Wildlife", cafe:"Cafe", nightlife:"Nightlife" };
+  const catEmoji = { surprise:"🎲", nature:"🌿", sightsee:"📸", eat:"🍽️", entertainment:"🎡", beach:"🏖️", culture:"🎨", wildlife:"🐨", cafe:"☕", nightlife:"🍸" };
   const AVATARS = ["🦊","🐱","🐨","🦁","🐼","🐸","🦉","🐯","🦄","🐙","🐢","🐵"];
   const COLORS = ["#ff6b5c","#ffce3a","#37e2b0","#4db8ff","#ff63b3","#9b6bff"];
   const TIERS = [
