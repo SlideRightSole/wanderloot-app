@@ -606,17 +606,28 @@
       </div>
 
       <div class="card">
+        <div class="label">Any dietary needs? <span style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0">— optional, tap any that apply</span></div>
+        <div class="grid" id="dietOpts">
+          <div class="opt diet" data-v="veg">🥗 Vegetarian</div>
+          <div class="opt diet" data-v="vegan">🌱 Vegan</div>
+          <div class="opt diet" data-v="halal">☪️ Halal</div>
+          <div class="opt diet" data-v="gf">🌾 Gluten-free</div>
+        </div>
+        <div class="note" style="margin-top:8px">We'll only send you to food spots that cater to these — the mystery stays intact.</div>
+      </div>
+
+      <div class="card">
         <div class="label">What are you in the mood for?</div>
         <div class="grid grid-3" id="catOpts">
           <div class="opt sel" data-v="surprise"><span class="emoji">🎲</span>Surprise me</div>
           <div class="opt" data-v="eat"><span class="emoji">🍽️</span>Eat &amp; drink</div>
-          <div class="opt" data-v="nature"><span class="emoji">🌿</span>Nature</div>
+          <div class="opt" data-v="cafe"><span class="emoji">☕</span>Cafe</div>
           <div class="opt" data-v="beach"><span class="emoji">🏖️</span>Beach</div>
           <div class="opt" data-v="sightsee"><span class="emoji">📸</span>Sightsee</div>
           <div class="opt" data-v="culture"><span class="emoji">🎨</span>Culture</div>
           <div class="opt" data-v="wildlife"><span class="emoji">🐨</span>Wildlife</div>
           <div class="opt" data-v="entertainment"><span class="emoji">🎡</span>Do stuff</div>
-          <div class="opt" data-v="cafe"><span class="emoji">☕</span>Cafe</div>
+          <div class="opt" data-v="nature"><span class="emoji">🌿</span>Nature</div>
         </div>
       </div>
 
@@ -929,6 +940,17 @@
   };
   Object.keys(RECAT).forEach(n => { const v = PLACES.find(p => p.name === n); if (v) v.cat = RECAT[n]; });
 
+  // Dietary options per food venue (partners declare these at onboarding; a plausible spread seeds the demo).
+  PLACES.forEach((p, i) => {
+    if ((p.cat === "eat" || p.cat === "cafe") && !p.diets) {
+      const d = ["veg"];                 // vegetarian options are near-universal
+      if (i % 2 === 0) d.push("gf");
+      if (i % 3 === 0) d.push("vegan");
+      if (i % 4 === 0) d.push("halal");
+      p.diets = d;
+    }
+  });
+
   // Partners set "Active" in the WanderLoot ops dashboard (same browser/origin) go live here automatically.
   try {
     const live = JSON.parse(localStorage.getItem("wl_live_partners") || "[]");
@@ -948,7 +970,7 @@
   ];
 
   // ============ State + storage ============
-  const state = { start: [-28.0027, 153.4309], dist: 55, budget: 1, cat: "surprise", party: "family", mode: "drive" };
+  const state = { start: [-28.0027, 153.4309], dist: 55, budget: 1, cat: "surprise", party: "family", mode: "drive", diets: [] };
   const MODE = { drive: { speed: 70, factor: 1.3, verb: "drive" }, walk: { speed: 4.8, factor: 1.25, verb: "walk" } };
   const DIST_SETS = {
     drive: [ {v:20,t:"30 min",s:"~20 km"}, {v:55,t:"1 hour",s:"~55 km",sel:1}, {v:120,t:"2 hours",s:"~120 km"}, {v:250,t:"Half day",s:"~250 km"}, {v:600,t:"No limit",s:"Go far"} ],
@@ -1340,9 +1362,15 @@
   wireOpts("budgetOpts", "budget", Number);
   wireOpts("catOpts", "cat");
   wireOpts("partyOpts", "party");
+  // Dietary needs — multi-select toggles
+  document.querySelectorAll("#dietOpts .opt").forEach(el => el.addEventListener("click", () => {
+    const v = el.dataset.v, on = el.classList.toggle("sel");
+    if (on) { if (!state.diets.includes(v)) state.diets.push(v); }
+    else state.diets = state.diets.filter(d => d !== v);
+  }));
   // 18+ acknowledgement when adults selected (placeholder for a real age gate)
   document.querySelector('#partyOpts .opt[data-v="adults"]').addEventListener("click", () => {
-    if (!LS.get("md_over18", false)) { LS.set("md_over18", true); toast("18+ confirmed. Nightlife unlocked."); }
+    if (!LS.get("md_over18", false)) { LS.set("md_over18", true); toast("18+ confirmed — adult venues unlocked."); }
   });
   document.getElementById("city").addEventListener("change", e => state.start = e.target.value.split(",").map(Number));
   document.getElementById("useLoc").addEventListener("click", () => {
@@ -1387,10 +1415,13 @@
     const catOk = p => state.cat === "surprise" || p.cat === state.cat;
     const budgetOk = p => state.budget === 0 ? p.budget === 0 : p.budget <= state.budget;
     const familyOk = p => state.party === "adults" ? true : !p.adult; // never send kids to 18+ venues
-    let m = PLACES.filter(p => inRange(p) && catOk(p) && budgetOk(p) && familyOk(p) && notUsed(p));
-    if (!m.length) m = PLACES.filter(p => inRange(p) && catOk(p) && familyOk(p) && notUsed(p));
-    if (!m.length) m = PLACES.filter(p => inRange(p) && familyOk(p) && notUsed(p));
-    if (!m.length) m = PLACES.filter(p => inRange(p) && familyOk(p));
+    const isFood = p => p.cat === "eat" || p.cat === "cafe";
+    // Dietary: only constrains FOOD spots; non-food (beaches, lookouts…) always pass. Never dropped in fallbacks.
+    const dietOk = p => !state.diets.length || !isFood(p) || (Array.isArray(p.diets) && state.diets.every(d => p.diets.includes(d)));
+    let m = PLACES.filter(p => inRange(p) && catOk(p) && budgetOk(p) && familyOk(p) && dietOk(p) && notUsed(p));
+    if (!m.length) m = PLACES.filter(p => inRange(p) && catOk(p) && familyOk(p) && dietOk(p) && notUsed(p));
+    if (!m.length) m = PLACES.filter(p => inRange(p) && familyOk(p) && dietOk(p) && notUsed(p));
+    if (!m.length) m = PLACES.filter(p => inRange(p) && familyOk(p) && dietOk(p));
     if (!m.length) { err.textContent = "Nothing in range. Try a longer drive distance."; return; }
     premiumActive = false;
     if (LS.get("md_premium", false)) {
