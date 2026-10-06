@@ -1,0 +1,16 @@
+{
+  "name": "WanderLoot",
+  "short_name": "WanderLoot",
+  "description": "A surprise outing with a hidden reward, revealed when you arrive.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3f8f6",
+  "theme_color": "#0fb894",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
