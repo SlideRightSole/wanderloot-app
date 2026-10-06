@@ -98,6 +98,8 @@
     .bdr-neon   { box-shadow: 0 0 0 3px #4db8ff, 0 0 12px rgba(77,184,255,.9) !important; }
     .bdr-flames { box-shadow: 0 0 0 3px #ff6b5c, 0 0 14px rgba(255,107,92,.85) !important; }
     .bdr-legend { box-shadow: 0 0 0 3px var(--sun), 0 0 18px rgba(255,206,58,.9) !important; animation: legendpulse 1.8s ease-in-out infinite; }
+    .bdr-royal  { box-shadow: 0 0 0 3px #7b6cf6, 0 0 12px rgba(123,108,246,.9) !important; }
+    .bdr-sunset { box-shadow: 0 0 0 3px #ff8b3d, 0 0 12px rgba(255,139,61,.9) !important; }
     @keyframes legendpulse { 0%,100% { box-shadow: 0 0 0 3px var(--sun), 0 0 12px rgba(255,206,58,.7) !important; } 50% { box-shadow: 0 0 0 4px #fff0b3, 0 0 22px rgba(255,206,58,1) !important; } }
 
     /* Caches & borders screen */
@@ -700,7 +702,9 @@
     ocean:  { name: "Ocean Glow",     cls: "bdr-ocean",  rarity: "Rare" },
     neon:   { name: "Neon Pulse",     cls: "bdr-neon",   rarity: "Rare" },
     flames: { name: "Trail Flames",   cls: "bdr-flames", rarity: "Epic" },
-    legend: { name: "Legendary Aura", cls: "bdr-legend", rarity: "Legendary" }
+    legend: { name: "Legendary Aura", cls: "bdr-legend", rarity: "Legendary" },
+    royal:  { name: "Royal Violet",   cls: "bdr-royal",  rarity: "Rare" },
+    sunset: { name: "Sunset Glow",    cls: "bdr-sunset", rarity: "Rare" }
   };
   const CACHES = [
     { id: "c1", name: "Surfers Beach Token",   clue: "Between the flags where the surfers gather — look to the sand.",        lat: -28.0025, lng: 153.4309, reward: "mint" },
@@ -708,7 +712,14 @@
     { id: "c3", name: "Burleigh Headland Hunt",clue: "Walk the headland track; the ocean guards this one.",                   lat: -28.0920, lng: 153.4560, reward: "ocean" },
     { id: "c4", name: "Rainforest Cache",      clue: "Follow the gully to the falls — it hides where the water sings.",       lat: -27.9765, lng: 153.1893, reward: "gold" },
     { id: "c5", name: "Lighthouse Secret",     clue: "Where the point watches the sea, by the old light at the border.",      lat: -28.1650, lng: 153.5520, reward: "flames" },
-    { id: "c6", name: "Legend of the Hinterland", clue: "Deep in the green of the mountain — the rarest find of all.",        lat: -27.9900, lng: 153.1900, reward: "legend" }
+    { id: "c6", name: "Legend of the Hinterland", clue: "Deep in the green of the mountain — the rarest find of all.",        lat: -27.9900, lng: 153.1900, reward: "legend" },
+    // ===== Sydney — Hills District =====
+    { id: "s1", name: "Baulkham Hills Beacon",  clue: "Where the Hills shoppers roam — the cache hides near the heart of Baulkham Hills.", lat: -33.7606, lng: 150.9922, reward: "royal" },
+    { id: "s2", name: "Winston Hills Hideaway", clue: "By the mall on the hill, a secret sits in Winston Hills.",             lat: -33.7876, lng: 150.9772, reward: "sunset" },
+    { id: "s3", name: "Castle Hill Keep",       clue: "Beneath the towers of Castle Hill, find the keep's hidden prize.",     lat: -33.7318, lng: 151.0049, reward: "neon" },
+    { id: "s4", name: "Bella Vista Lookout",    clue: "Out by the old farm and the lake — a beautiful view guards this one.", lat: -33.7389, lng: 150.9456, reward: "ocean" },
+    { id: "s5", name: "Norwest Water Cache",    clue: "Around the Norwest lake, where business meets the water.",             lat: -33.7296, lng: 150.9692, reward: "gold" },
+    { id: "s6", name: "Kellyville Quest",       clue: "Far out in Kellyville — the quest few finish.",                        lat: -33.7126, lng: 150.9570, reward: "mint" }
   ];
   const getFoundCaches = () => LS.get("md_caches", []);
   function addFoundCache(id) { const c = getFoundCaches(); if (!c.includes(id)) { c.push(id); LS.set("md_caches", c); } }
@@ -796,7 +807,7 @@
       el.style.color = "#fff";
       el.textContent = (p && p.name ? p.name.trim().charAt(0).toUpperCase() : "") || "?";
     }
-    el.classList.remove("bdr-gold", "bdr-mint", "bdr-ocean", "bdr-neon", "bdr-flames", "bdr-legend");
+    el.classList.remove("bdr-gold", "bdr-mint", "bdr-ocean", "bdr-neon", "bdr-flames", "bdr-legend", "bdr-royal", "bdr-sunset");
     try { const c = (BORDERS[getBorder()] || {}).cls; if (c) el.classList.add(c); } catch (e) {}
   }
 
@@ -1404,7 +1415,7 @@
         const deg = bearingDeg(pos, [c.lat, c.lng]);
         document.getElementById("hArrow").style.transform = "rotate(" + deg + "deg)";
         document.getElementById("hDir").textContent = "Head " + bearingName(deg).toLowerCase();
-        if (km <= 0.06) { document.getElementById("hFound").disabled = false; document.getElementById("hMsg").textContent = "You're here! Tap Found it!"; }
+        if (km <= 0.1) { document.getElementById("hFound").disabled = false; document.getElementById("hMsg").textContent = "You're here! Tap Found it!"; }
       }, () => { document.getElementById("hMsg").textContent = "GPS unavailable — use Simulate find to test."; }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 });
     } else { document.getElementById("hMsg").textContent = "No GPS — use Simulate find to test."; }
   };
