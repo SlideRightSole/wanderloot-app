@@ -92,6 +92,10 @@
     .navtile.quests { background: linear-gradient(135deg, #7b6cf6, #4db8ff); }
     .loot-banner { background: linear-gradient(135deg, var(--sun), #ff8b3d); color: #3a2400; border-radius: 14px; padding: 12px 15px; margin-bottom: 12px; font-weight: 800; font-size: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px; box-shadow: 0 6px 16px rgba(224,160,28,.3); }
     .loot-banner span { font-size: 20px; }
+    .store-opt { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: rgba(255,255,255,.1); border-radius: 12px; padding: 14px; margin-top: 12px; cursor: pointer; text-align: left; color: #fff; }
+    .store-opt.ult { background: linear-gradient(135deg, rgba(224,160,28,.35), rgba(255,139,61,.22)); border: 1px solid rgba(255,206,58,.5); }
+    .store-opt b { font-size: 15px; } .store-opt .so-d { font-size: 12px; color: #bfeee0; margin-top: 2px; }
+    .store-opt .so-p { font-family: "Plus Jakarta Sans"; font-weight: 800; font-size: 20px; color: #ffd873; flex: 0 0 auto; }
 
     /* Profile borders (unlocked by location caches) — applied to round avatar elements */
     .bdr-gold,.bdr-mint,.bdr-ocean,.bdr-neon,.bdr-flames,.bdr-legend,.bdr-royal,.bdr-sunset { position: relative; overflow: visible !important; }
@@ -896,7 +900,10 @@
     document.getElementById("navPassSub").textContent = stampCount() + " stamps";
     const nq = document.getElementById("navQuestSub"); if (nq) nq.textContent = getFoundCaches().length + " found";
     const lb = document.getElementById("lootBanner");
-    if (lb) { const a = activeLoot(); if (a.length) { const soon = Math.min(...a.map(x => lootDaysLeft(x.at))); lb.classList.remove("hidden"); lb.innerHTML = "💰 " + a.length + " loot reward" + (a.length > 1 ? "s" : "") + " waiting · expires in " + soon + "d <span>›</span>"; } else lb.classList.add("hidden"); }
+    if (lb) {
+      if (ultimateActive()) { lb.classList.remove("hidden"); lb.innerHTML = "⭐ Ultimate Pass active · " + ultDaysLeft() + "d left — loot unlocks as you explore <span>›</span>"; }
+      else { const a = activeLoot(); if (a.length) { const soon = Math.min(...a.map(x => lootDaysLeft(x.at))); lb.classList.remove("hidden"); lb.innerHTML = "💰 " + a.length + " loot reward" + (a.length > 1 ? "s" : "") + " waiting · expires in " + soon + "d <span>›</span>"; } else lb.classList.add("hidden"); }
+    }
     const rw = document.getElementById("navRewSub"); if (rw) rw.textContent = getPoints() + " pts";
     const sc = getStreak(), strChip = document.getElementById("streakChip");
     if (strChip) { if (sc.count > 0) { strChip.classList.remove("hidden"); document.getElementById("streakN").textContent = sc.count; } else { strChip.classList.add("hidden"); } }
@@ -1246,6 +1253,10 @@
   const LOOT_DAYS = 7;
   const getUnlocks = () => LS.get("md_unlocks", 0);
   const setUnlocks = (n) => LS.set("md_unlocks", Math.max(0, n));
+  const getUltimate = () => LS.get("md_ultimate", 0);
+  const setUltimate = (ts) => LS.set("md_ultimate", ts);
+  const ultimateActive = () => getUltimate() > Date.now();
+  const ultDaysLeft = () => Math.max(0, Math.ceil((getUltimate() - Date.now()) / 86400000));
   const getUnlocked = () => LS.get("md_unlocked", []);
   function addUnlocked(venues) { const u = getUnlocked(), now = Date.now(); venues.forEach(v => { if (!u.some(x => x.name === v.name)) u.push({ name: v.name, offer: v.offer, cat: v.cat, lat: v.lat, lng: v.lng, at: now }); }); LS.set("md_unlocked", u); }
   function activeLoot() { const cut = Date.now() - LOOT_DAYS * 86400000; return getUnlocked().filter(x => x.at > cut && !getRedeemed().includes(x.name)); }
@@ -1260,28 +1271,42 @@
   function looterCount(name) { let h = 0; for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0; return 40 + (h % 360); }
   function renderNearbyLoot() {
     const n = nearbyLoot(); if (!n.length) return "";
+    const ult = ultimateActive();
+    if (ult) addUnlocked(n); // Ultimate Pass auto-claims each area you reach
     let h = '<div class="nearby" id="nearbyBox"><div class="nb-h">💰 More loot near here</div>';
     n.forEach(p => {
       const soc = '<div class="nb-soc">🧑 ' + looterCount(p.name) + ' Looters unwrapped this</div>';
-      if (areaUnlocked || lootActive(p.name)) h += '<div class="nb-item open"><div class="nb-name">' + p.name.split(",")[0] + '</div><div class="nb-sub">' + p.offer + '</div>' + soc + '</div>';
+      if (areaUnlocked || ult || lootActive(p.name)) h += '<div class="nb-item open"><div class="nb-name">' + p.name.split(",")[0] + '</div><div class="nb-sub">' + p.offer + '</div>' + soc + '</div>';
       else h += '<div class="nb-item"><div class="nb-name blur">' + p.name.split(",")[0] + '</div><div class="nb-sub">🔒 Hidden ' + (catName[p.cat] || "spot") + ' reward</div>' + soc + '</div>';
     });
-    if (!areaUnlocked) { const cr = getUnlocks(); h += '<button class="btn alt" id="unlockArea" style="width:100%;margin-top:10px">' + (cr > 0 ? ("Unlock this area · " + cr + " unlock" + (cr > 1 ? "s" : "") + " left") : "Get 5 local unlocks · $5") + '</button>'; }
+    if (ult) h += '<div class="nb-soc" style="margin-top:9px;color:var(--sun);font-size:12.5px">⭐ Ultimate Pass active · ' + ultDaysLeft() + 'd left — loot unlocks as you explore</div>';
+    else if (!areaUnlocked) { const cr = getUnlocks(); h += '<button class="btn alt" id="unlockArea" style="width:100%;margin-top:10px">' + (cr > 0 ? ("Unlock this area · " + cr + " unlock" + (cr > 1 ? "s" : "") + " left") : "Unlock nearby loot") + '</button>'; }
     h += '</div>';
     return h;
+  }
+  function unlockAreaNow() {
+    areaUnlocked = true; addUnlocked(nearbyLoot()); burst();
+    toast("Unlocked for " + LOOT_DAYS + " days — come back anytime! (" + getUnlocks() + " left)");
+    const el = document.getElementById("nearbyBox"); if (el) el.outerHTML = renderNearbyLoot();
+    refreshChrome();
   }
   function wireNearbyLoot() {
     const b = document.getElementById("unlockArea");
     if (!b) return;
-    b.onclick = () => {
-      let cr = getUnlocks();
-      if (cr <= 0) { setUnlocks(5); cr = 5; toast("5 local unlocks added · $5 💰"); } // demo "payment"
-      setUnlocks(cr - 1);
-      areaUnlocked = true; addUnlocked(nearbyLoot()); burst();
-      toast("Unlocked for " + LOOT_DAYS + " days — come back anytime! (" + getUnlocks() + " left)");
-      const el = document.getElementById("nearbyBox"); if (el) el.outerHTML = renderNearbyLoot();
-      refreshChrome();
-    };
+    b.onclick = () => { const cr = getUnlocks(); if (cr > 0) { setUnlocks(cr - 1); unlockAreaNow(); } else openUnlockStore(); };
+  }
+  function openUnlockStore() {
+    const ov = document.createElement("div"); ov.className = "share-ov"; ov.id = "storeOv";
+    ov.innerHTML = '<div class="share-card"><div class="sc-top">💰 Unlock more loot</div>' +
+      '<div class="store-opt" id="buyPack"><div><b>10 local unlocks</b><div class="so-d">Open 10 areas · each claimable for 7 days</div></div><div class="so-p">$7</div></div>' +
+      '<div class="store-opt ult" id="buyUlt"><div><b>⭐ Ultimate Pass</b><div class="so-d">Unlock every discount for 7 days as you explore</div></div><div class="so-p">$20</div></div>' +
+      '</div><div class="share-actions"><button class="btn ghost" id="storeClose">Maybe later</button></div>' +
+      '<div class="sc-hint">A credit opens one area; the Pass opens everything you drive through.</div>';
+    document.body.appendChild(ov);
+    document.getElementById("buyPack").onclick = () => { setUnlocks(getUnlocks() + 10); toast("10 unlocks added · $7 💰"); ov.remove(); setUnlocks(getUnlocks() - 1); unlockAreaNow(); };
+    document.getElementById("buyUlt").onclick = () => { setUltimate(Date.now() + LOOT_DAYS * 86400000); toast("⭐ Ultimate Pass active for " + LOOT_DAYS + " days!"); ov.remove(); unlockAreaNow(); };
+    document.getElementById("storeClose").onclick = () => ov.remove();
+    ov.addEventListener("click", e => { if (e.target === ov) ov.remove(); });
   }
   function updateArriveProgress(newArea) {
     const el = document.getElementById("arriveProgress");
