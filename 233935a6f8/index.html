@@ -298,6 +298,21 @@
     .rw-tier.on .badge{ background:var(--sun); }
     .rw-tier .tt b{ font-size:14.5px; } .rw-tier .tt .pts{ font-size:11.5px; color:var(--muted); font-weight:700; }
     .rw-tier .tt p{ font-size:12.5px; color:var(--muted); margin-top:2px; }
+    /* XP unlocks: titles + collector sets */
+    .rw-note{ font-size:12.5px; color:var(--muted); margin:-6px 0 10px; }
+    .rw-titles{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:4px; }
+    .rw-title{ flex:1 1 44%; text-align:left; border:1px solid var(--line); background:var(--panel); border-radius:12px; padding:10px 12px; cursor:pointer; font-family:inherit; color:var(--text); }
+    .rw-title b{ display:block; font-size:13.5px; } .rw-title small{ display:block; font-size:11px; color:var(--muted); margin-top:2px; }
+    .rw-title.on{ border-color:var(--good); background:rgba(55,226,176,.1); }
+    .rw-title.lk{ opacity:.55; cursor:default; }
+    .rw-sets{ display:flex; flex-direction:column; gap:8px; }
+    .rw-set{ display:flex; gap:12px; align-items:center; border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
+    .rw-set.on{ border-color:var(--sun); background:rgba(255,206,58,.08); }
+    .rw-set .se{ font-size:24px; flex:0 0 auto; } .rw-set .st{ flex:1; min-width:0; }
+    .rw-set .st b{ font-size:14px; } .rw-set .st small{ font-size:11.5px; color:var(--muted); }
+    .pbar{ height:6px; border-radius:999px; background:var(--panel-2); overflow:hidden; margin:5px 0; }
+    .pbar i{ display:block; height:100%; background:var(--good); border-radius:999px; }
+    .setdone{ background:linear-gradient(135deg, rgba(255,206,58,.22), rgba(255,99,179,.14)); border:1px solid var(--sun); border-radius:12px; padding:10px 13px; font-weight:800; font-size:13.5px; margin:10px 0; }
     .rw-lead{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:13px; }
     .rw-lead .row{ display:flex; justify-content:space-between; font-size:13.5px; padding:5px 0; border-bottom:1px solid var(--line); }
     .rw-lead .row:last-child{ border:none; } .rw-lead .row b{ font-weight:800; }
@@ -568,8 +583,8 @@
       <div class="card">
         <div class="label">Who's coming?</div>
         <div class="grid" id="partyOpts">
-          <div class="opt sel" data-v="adults">🍸 Adults<span class="sub">18+, unlocks nightlife</span></div>
-          <div class="opt" data-v="family">👨‍👩‍👧 With kids<span class="sub">Family-friendly only</span></div>
+          <div class="opt sel" data-v="family">👨‍👩‍👧 With kids<span class="sub">Family-friendly only</span></div>
+          <div class="opt" data-v="adults">🧑‍🤝‍🧑 Adults only<span class="sub">Includes 18+ venues</span></div>
         </div>
       </div>
 
@@ -577,12 +592,14 @@
         <div class="label">What are you in the mood for?</div>
         <div class="grid grid-3" id="catOpts">
           <div class="opt sel" data-v="surprise"><span class="emoji">🎲</span>Surprise me</div>
-          <div class="opt" data-v="nature"><span class="emoji">🌿</span>Nature</div>
-          <div class="opt" data-v="sightsee"><span class="emoji">📸</span>Sightsee</div>
           <div class="opt" data-v="eat"><span class="emoji">🍽️</span>Eat &amp; drink</div>
-          <div class="opt" data-v="entertainment"><span class="emoji">🎡</span>Do stuff</div>
+          <div class="opt" data-v="nature"><span class="emoji">🌿</span>Nature</div>
           <div class="opt" data-v="beach"><span class="emoji">🏖️</span>Beach</div>
-          <div class="opt" data-v="nightlife"><span class="emoji">🍸</span>Nightlife</div>
+          <div class="opt" data-v="sightsee"><span class="emoji">📸</span>Sightsee</div>
+          <div class="opt" data-v="culture"><span class="emoji">🎨</span>Culture</div>
+          <div class="opt" data-v="wildlife"><span class="emoji">🐨</span>Wildlife</div>
+          <div class="opt" data-v="entertainment"><span class="emoji">🎡</span>Do stuff</div>
+          <div class="opt" data-v="market"><span class="emoji">🛍️</span>Markets</div>
         </div>
       </div>
 
@@ -617,6 +634,7 @@
         <div class="hint" id="hint"></div>
         <button class="btn" id="liveBtn">Start live drive (use my GPS)</button>
         <button class="btn ghost" id="demoBtn">Preview the arrival (demo)</button>
+        <button class="btn ghost" id="rerollBtn">🎲 Spin again</button>
         <button class="btn ghost" id="again">Pick a different mystery</button>
         <div id="driveMsg" class="note"></div>
       </div>
@@ -876,14 +894,33 @@
   };
   Object.keys(PARKING).forEach(n => { const v = PLACES.find(p => p.name === n); if (v) v.park = PARKING[n]; });
 
+  // Re-categorise seed venues for the refreshed mood grid (Culture / Wildlife / Markets; bars → Eat & drink).
+  const RECAT = {
+    // nightlife → eat (still adult:true, so families are filtered out)
+    "The Anchor Pub, The Rocks": "eat", "Neon Room, Kings Cross": "eat", "The Harbourview Hotel, Milsons Point": "eat",
+    "Cellar Door Wine Bar, Newtown": "eat", "The Sandbar Rooftop, Surfers Paradise": "eat",
+    "Miami Public House, Miami": "eat", "Neon Reef Nightclub, Surfers Paradise": "eat",
+    // wildlife
+    "Currumbin Wildlife Sanctuary": "wildlife", "Symbio Wildlife Park, Helensburgh": "wildlife",
+    "Cleland Wildlife Park": "wildlife", "Werribee Open Range Zoo": "wildlife",
+    "Blackbutt Reserve, Kotara": "wildlife", "Tidbinbilla Nature Reserve": "wildlife",
+    // culture
+    "HOTA Gallery, Bundall": "culture", "Questacon, Parkes": "culture", "Australian War Memorial, Campbell": "culture",
+    "Mount Stromlo Observatory, Weston Creek": "culture", "Berkelouw Book Barn, Berrima": "culture",
+    // markets
+    "Miami Marketta Street Food, Miami": "market", "Parramatta Night Markets": "market",
+    "Fremantle Markets": "market", "Spice Alley, Chippendale": "market", "Hahndorf, Adelaide Hills": "market"
+  };
+  Object.keys(RECAT).forEach(n => { const v = PLACES.find(p => p.name === n); if (v) v.cat = RECAT[n]; });
+
   // Partners set "Active" in the WanderLoot ops dashboard (same browser/origin) go live here automatically.
   try {
     const live = JSON.parse(localStorage.getItem("wl_live_partners") || "[]");
     if (Array.isArray(live)) live.forEach(v => { if (v && v.name && v.lat != null && !PLACES.some(p => p.name === v.name)) PLACES.push(v); });
   } catch (e) {}
 
-  const catName = { surprise:"Surprise", nature:"Nature", sightsee:"Sightsee", eat:"Eat & drink", entertainment:"Do stuff", beach:"Beach", nightlife:"Nightlife" };
-  const catEmoji = { surprise:"🎲", nature:"🌿", sightsee:"📸", eat:"🍽️", entertainment:"🎡", beach:"🏖️", nightlife:"🍸" };
+  const catName = { surprise:"Surprise", nature:"Nature", sightsee:"Sightsee", eat:"Eat & drink", entertainment:"Do stuff", beach:"Beach", culture:"Culture", wildlife:"Wildlife", market:"Markets", nightlife:"Nightlife" };
+  const catEmoji = { surprise:"🎲", nature:"🌿", sightsee:"📸", eat:"🍽️", entertainment:"🎡", beach:"🏖️", culture:"🎨", wildlife:"🐨", market:"🛍️", nightlife:"🍸" };
   const AVATARS = ["🦊","🐱","🐨","🦁","🐼","🐸","🦉","🐯","🦄","🐙","🐢","🐵"];
   const COLORS = ["#ff6b5c","#ffce3a","#37e2b0","#4db8ff","#ff63b3","#9b6bff"];
   const TIERS = [
@@ -895,13 +932,13 @@
   ];
 
   // ============ State + storage ============
-  const state = { start: [-28.0027, 153.4309], dist: 55, budget: 1, cat: "surprise", party: "adults", mode: "drive" };
+  const state = { start: [-28.0027, 153.4309], dist: 55, budget: 1, cat: "surprise", party: "family", mode: "drive" };
   const MODE = { drive: { speed: 70, factor: 1.3, verb: "drive" }, walk: { speed: 4.8, factor: 1.25, verb: "walk" } };
   const DIST_SETS = {
     drive: [ {v:20,t:"30 min",s:"~20 km"}, {v:55,t:"1 hour",s:"~55 km",sel:1}, {v:120,t:"2 hours",s:"~120 km"}, {v:250,t:"Half day",s:"~250 km"}, {v:600,t:"No limit",s:"Go far"} ],
     walk:  [ {v:0.5,t:"5 min",s:"~500 m"}, {v:1,t:"10 min",s:"~1 km",sel:1}, {v:1.6,t:"20 min",s:"~1.5 km"}, {v:2.5,t:"30 min",s:"~2.5 km"}, {v:5,t:"1 hour",s:"~5 km"} ]
   };
-  let chosen, umap, umarker, emap, watchId = null, demoTimer = null, arrived = false, premiumActive = false, parked = false;
+  let chosen, umap, umarker, emap, watchId = null, demoTimer = null, arrived = false, premiumActive = false, parked = false, lastPool = [];
   // ===== Parking leg helpers (drivers park near, then walk the reveal) =====
   function parkInfo() { return (chosen && state.mode !== "walk" && chosen.park && chosen.park.lat != null) ? chosen.park : null; }
   function parkPt() { const p = parkInfo(); return p ? [p.lat, p.lng] : null; }
@@ -995,6 +1032,51 @@
     "Trailblazer": "First access to brand-new partners and more rare finds.",
     "Legend": "Top-tier offers and a shot at the monthly leaderboard crown."
   };
+
+  // ============ XP unlocks: callsign titles, collector sets, re-rolls ============
+  // Callsign titles — earned by points / caches / sets, equipped under your name.
+  const TITLES = [
+    { k: "wanderer",    name: "Wanderer",          req: { pts: 0 },    hint: "Where it all begins" },
+    { k: "nightowl",    name: "Night Owl",         req: { pts: 150 },  hint: "Reach 150 points" },
+    { k: "beachbandit", name: "Beach Bandit",      req: { pts: 400 },  hint: "Reach 400 points" },
+    { k: "hinterland",  name: "Hinterland Hunter", req: { pts: 800 },  hint: "Reach 800 points" },
+    { k: "cachehound",  name: "Cache Hound",       req: { caches: 5 }, hint: "Find 5 caches" },
+    { k: "collector",   name: "The Collector",     req: { sets: 2 },   hint: "Complete 2 collector sets" },
+    { k: "lootlegend",  name: "Loot Legend",       req: { pts: 2500 }, hint: "Reach 2,500 points" }
+  ];
+  function titleUnlocked(t) {
+    if (t.req.pts != null)    return getPoints() >= t.req.pts;
+    if (t.req.caches != null) return getFoundCaches().length >= t.req.caches;
+    if (t.req.sets != null)   return completedSets().length >= t.req.sets;
+    return false;
+  }
+  const getTitle = () => LS.get("md_title", "");
+  const setTitle = (k) => LS.set("md_title", k);
+  function titleName(k) { const t = TITLES.find(x => x.k === k); return t ? t.name : ""; }
+
+  // Collector sets — visit N of a kind (or find N caches) to complete; +60 pts each.
+  const SETS = [
+    { k: "beaches", name: "Beach Comber",  emoji: "🏖️", need: 4, test: p => p.cat === "beach",    hint: "Visit 4 beaches" },
+    { k: "peaks",   name: "Peak Seeker",   emoji: "🔭", need: 4, test: p => p.cat === "sightsee", hint: "Visit 4 lookouts" },
+    { k: "forests", name: "Forest Finder", emoji: "🌿", need: 4, test: p => p.cat === "nature",   hint: "Visit 4 nature spots" },
+    { k: "eats",    name: "Local Foodie",  emoji: "🍽️", need: 3, test: p => p.cat === "eat",      hint: "Visit 3 eateries" },
+    { k: "caches",  name: "Cache Hunter",  emoji: "🧭", need: 4, caches: true,                     hint: "Find 4 caches" }
+  ];
+  function setProgress(s) { return s.caches ? Math.min(getFoundCaches().length, s.need) : Math.min(getVisited().filter(s.test).length, s.need); }
+  function setDone(s) { return setProgress(s) >= s.need; }
+  function completedSets() { return SETS.filter(setDone); }
+  function checkSets() {
+    const done = LS.get("md_setsdone", []); const newly = [];
+    SETS.forEach(s => { if (setDone(s) && !done.includes(s.k)) { done.push(s.k); newly.push(s); } });
+    if (newly.length) { LS.set("md_setsdone", done); newly.forEach(() => addPoints(60)); }
+    return newly;
+  }
+
+  // Re-rolls — a free daily "spin again" allowance that grows with your tier (XP).
+  function rerollCap() { return tierIndex(getPoints()) + 1; }     // Rookie 1 → Legend 5 per day
+  const _rtoday = () => new Date().toISOString().slice(0, 10);
+  function getRerolls() { const r = LS.get("md_reroll", null); if (!r || r.d !== _rtoday()) { const n = rerollCap(); LS.set("md_reroll", { d: _rtoday(), n: n }); return n; } return r.n; }
+  function useReroll() { const n = getRerolls(); if (n <= 0) return false; LS.set("md_reroll", { d: _rtoday(), n: n - 1 }); return true; }
 
   // ============ Helpers ============
   function animateIn(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
@@ -1175,7 +1257,7 @@
       chip.classList.remove("hidden");
       paintAvatar(document.getElementById("chipFace"), p);
       document.getElementById("chipName").textContent = p.name;
-      document.getElementById("chipTier").textContent = tierFor(getPoints()).name;
+      document.getElementById("chipTier").textContent = getTitle() ? titleName(getTitle()) : tierFor(getPoints()).name;
     } else {
       chip.classList.add("hidden");
     }
@@ -1296,9 +1378,19 @@
       const prem = m.filter(isPremium);
       if (prem.length) { m = prem; premiumActive = true; LS.set("md_premium", false); } // spend honoured; else keep it for a longer trip
     }
+    lastPool = m.slice(); // remember the eligible pool so "Spin again" can swap within it
     chosen = pickDestination(m);
     showResult();
   });
+  function doReroll() {
+    if (!lastPool || lastPool.length < 2) { toast("No other mystery in range to swap to — try a longer trip"); return; }
+    if (!useReroll()) { toast("No re-rolls left today — you earn more as you tier up 🎲"); return; }
+    const others = lastPool.filter(p => !chosen || p.name !== chosen.name);
+    chosen = others.length ? others[Math.floor(Math.random() * others.length)] : pickDestination(lastPool);
+    showResult();
+    const n = getRerolls();
+    toast("New mystery! " + n + " spin" + (n === 1 ? "" : "s") + " left today 🎲");
+  }
 
   function showResult() {
     showOnly("result");
@@ -1311,6 +1403,8 @@
     document.getElementById("driveKicker").textContent = (premiumActive ? "⭐ Premium mystery " : "Mystery ") + m.verb + " underway";
     document.getElementById("etaLabel").textContent = "est. " + m.verb;
     const _lb = document.getElementById("liveBtn"); _lb.textContent = "Start live " + m.verb + " (use my GPS)"; _lb.classList.remove("alt");
+    const _rr = document.getElementById("rerollBtn");
+    if (_rr) { const n = getRerolls(); _rr.textContent = n > 0 ? ("🎲 Spin again · " + n + " left") : "🎲 Spin again (none left today)"; _rr.disabled = (lastPool.length < 2); }
     document.getElementById("catV").textContent = catName[chosen.cat] || "Surprise";
     document.getElementById("hint").innerHTML = "<b>Clue:</b> " + chosen.hint;
     // reward value chip: show the value, never the offer or category (keeps the mystery)
@@ -1545,13 +1639,15 @@
     setTimeout(finish, rare ? 3400 : 2700);
   }
   function renderArrival(newArea, beforeTier, rare, streak) {
+    const newSets = checkSets(); // collector-set completions (awards +60 pts each before the tier-up check below)
     const boosted = chosen.offer && tierIndex(getPoints()) >= 2; // Adventurer+
     const gmaps = "https://www.google.com/maps/dir/?api=1&travelmode=" + (state.mode === "walk" ? "walking" : "driving") + "&destination=" + chosen.lat + "," + chosen.lng;
     let html =
       (rare ? '<div class="rare-flag">✨ Rare find — bonus +75 pts!</div>' : '') +
       '<div class="kicker" style="color:var(--good)">You made it</div>' +
       '<h2>' + chosen.name + '</h2>' +
-      '<div class="addr">' + (catName[chosen.cat] || "") + '</div>';
+      '<div class="addr">' + (catName[chosen.cat] || "") + '</div>' +
+      (newSets.length ? '<div class="setdone">🏅 Collector set complete: ' + newSets.map(s => s.emoji + " " + s.name).join(", ") + ' · +' + (60 * newSets.length) + ' pts!</div>' : '');
     if (chosen.offer) {
       html += '<div class="voucher">' +
                 '<div class="v-label">Your reward</div>' +
@@ -1736,7 +1832,10 @@
   }
   function checkTierUp(beforeIdx) {
     const after = tierIndex(getPoints());
-    if (after > beforeIdx) { burst(); toast("Tier up! You're now " + TIERS[after].name); }
+    if (after > beforeIdx) {
+      setUnlocks(getUnlocks() + 1); // XP unlock: one free loot unlock each time you tier up
+      burst(); toast("Tier up! You're now " + TIERS[after].name + " — +1 free loot unlock 🎁");
+    }
   }
 
   // ============ Live + demo drive ============
@@ -1778,6 +1877,7 @@
 
   // ============ Navigation ============
   function backHome() { stopTracking(); stopNav(); stopHunt(); refreshChrome(); showOnly("setup"); }
+  document.getElementById("rerollBtn").addEventListener("click", doReroll);
   document.getElementById("again").addEventListener("click", backHome);
   document.getElementById("again2").addEventListener("click", backHome);
   document.getElementById("mapBack").addEventListener("click", backHome);
@@ -1885,6 +1985,22 @@
            '<button id="buy' + key + '"' + (can ? '' : ' disabled') + '>' + cost + ' pts</button></div>';
   }
   function leadRow(name, val, me) { return '<div class="row' + (me ? ' me' : '') + '"><span>' + name + '</span><b>' + val + ' pts</b></div>'; }
+  function titlesHtml() {
+    const cur = getTitle();
+    return '<div class="rw-titles">' + TITLES.map(t => {
+      const un = titleUnlocked(t), on = cur === t.k;
+      return '<button class="rw-title' + (on ? ' on' : '') + (un ? '' : ' lk') + '" data-title="' + t.k + '"' + (un ? '' : ' disabled') + '>' +
+        '<b>' + t.name + '</b><small>' + (un ? (on ? '✓ Equipped' : 'Tap to equip') : ('🔒 ' + t.hint)) + '</small></button>';
+    }).join('') + '</div>';
+  }
+  function setsHtml() {
+    return '<div class="rw-sets">' + SETS.map(s => {
+      const p = setProgress(s), done = p >= s.need;
+      return '<div class="rw-set' + (done ? ' on' : '') + '"><div class="se">' + s.emoji + '</div>' +
+        '<div class="st"><b>' + s.name + (done ? ' ✓' : '') + '</b><div class="pbar"><i style="width:' + Math.round(p / s.need * 100) + '%"></i></div>' +
+        '<small>' + p + '/' + s.need + ' · ' + s.hint + '</small></div></div>';
+    }).join('') + '</div>';
+  }
   function openRewards() {
     showOnly("rewardsView");
     const pts = getPoints(), tier = tierFor(pts), nxt = nextTier(pts), fr = getFreezes(), me = getProfile() ? getProfile().name : "You";
@@ -1892,6 +2008,8 @@
     h += '<div class="rw-h">Spend your points</div>';
     h += spendRow('⭐', 'Unlock a premium mystery', 'Your next mystery is a guaranteed premium venue.', PREMIUM_COST, pts, 'Premium');
     h += spendRow('🧊', 'Streak freeze' + (fr ? ' — you have ' + fr : ''), 'Protects your 🔥 streak if you miss a day.', FREEZE_COST, pts, 'Freeze');
+    h += '<div class="rw-h">Your callsign</div><p class="rw-note">Pick a title to show under your name. Unlock more with points, caches &amp; sets.</p>' + titlesHtml();
+    h += '<div class="rw-h">Collector sets</div><p class="rw-note">Complete a set for +60 pts and bragging rights.</p>' + setsHtml();
     h += '<div class="rw-h">Tiers &amp; what they unlock</div><div class="rw-ladder">';
     TIERS.forEach(t => {
       const reached = pts >= t.min, cur = t.name === tier.name;
@@ -1908,6 +2026,10 @@
       if (spendPoints(PREMIUM_COST)) { LS.set("md_premium", true); refreshChrome(); toast("Premium unlocked! It's waiting on your next mystery ⭐"); openRewards(); }
       else toast("Not enough points yet — keep exploring!");
     };
+    document.querySelectorAll(".rw-title:not(.lk)").forEach(b => b.onclick = () => {
+      const k = b.dataset.title; setTitle(getTitle() === k ? "" : k); refreshChrome(); openRewards();
+      toast(getTitle() ? ("Callsign: " + titleName(getTitle())) : "Callsign cleared");
+    });
     const fb = document.getElementById("buyFreeze"); if (fb) fb.onclick = () => {
       if (spendPoints(FREEZE_COST)) { setFreezes(getFreezes() + 1); refreshChrome(); toast("Streak freeze earned 🧊"); openRewards(); }
       else toast("Not enough points yet — keep exploring!");
