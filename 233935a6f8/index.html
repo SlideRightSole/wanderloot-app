@@ -680,16 +680,7 @@
     { name: "Glenelg Beach & Jetty", lat: -34.9800, lng: 138.5140, cat: "beach", budget: 0, hint: "A tram ride to a jetty, sand and gelato." },
     { name: "Cleland Wildlife Park", lat: -34.9660, lng: 138.6960, cat: "entertainment", budget: 2, hint: "Walk among kangaroos and hold a koala." },
 
-    // ===== Canberra / Queanbeyan partner venues (illustrative, carry vouchers) =====
-    { name: "The Rusty Nail Café, Queanbeyan", lat: -35.3535, lng: 149.2335, cat: "eat", budget: 1, tier: "priority", offer: "Free house pastry with any coffee", value: 8, closes: "2:30pm", hint: "A warm corner café the locals fill before work.", park: { lat: -35.3546, lng: 149.2324, desc: "Free 2-hr parking on Monaro St", diff: "easy" } },
-    { name: "Byrne's Mill Restaurant, Queanbeyan", lat: -35.3510, lng: 149.2310, cat: "eat", budget: 2, tier: "priority", offer: "Free entrée with any two mains", value: 28, closes: "9:30pm", hint: "Old bluestone mill, river views and a proper long dinner.", park: { lat: -35.3521, lng: 149.2321, desc: "Free car park off Collett St", diff: "easy" } },
-    { name: "Braddon Woodfired Pizza, Braddon", lat: -35.2730, lng: 149.1330, cat: "eat", budget: 2, tier: "priority", offer: "Free garlic pizza with any two mains", value: 30, closes: "9:30pm", hint: "Charred crusts in the buzziest strip in town.", park: { lat: -35.2741, lng: 149.1341, desc: "Lonsdale St car park (2 min walk)", diff: "moderate" } },
-    { name: "Lonsdale Street Roasters, Braddon", lat: -35.2725, lng: 149.1338, cat: "eat", budget: 1, tier: "standard", offer: "Free pastry with any coffee", value: 8, closes: "3:00pm", hint: "The roaster the whole city argues about — in a good way.", park: { lat: -35.2714, lng: 149.1327, desc: "Elouera St parking, Braddon", diff: "moderate" } },
-    { name: "Kingston Foreshore Grill, Kingston", lat: -35.3155, lng: 149.1480, cat: "eat", budget: 2, tier: "standard", offer: "20 percent off the whole table", value: 40, closes: "10:00pm", hint: "Lakeside tables and steaks as the sun drops.", park: { lat: -35.3166, lng: 149.1469, desc: "Free foreshore parking, Trevillian Quay", diff: "easy" } },
-    { name: "Holey Moley Mini Golf, Civic", lat: -35.2790, lng: 149.1300, cat: "entertainment", budget: 1, tier: "standard", offer: "Two for one rounds tonight", value: 24, closes: "10:00pm", hint: "Putt-putt and cocktails under the neon.", park: { lat: -35.2801, lng: 149.1311, desc: "Canberra Centre car park (5 min walk)", diff: "moderate" } },
-    { name: "Capital Brewing Co, Fyshwick", lat: -35.3340, lng: 149.1770, cat: "nightlife", budget: 2, adult: true, tier: "priority", offer: "Free tasting paddle with any meal", value: 16, closes: "10:00pm", hint: "A big brewery shed, a lawn and a beer with your name on it.", park: { lat: -35.3351, lng: 149.1759, desc: "Free on-site car park, Dairy Rd", diff: "easy" } },
-
-    // ===== Canberra / Queanbeyan free & low-cost gems =====
+    // ===== Canberra / Queanbeyan free & low-cost gems (no partner vouchers here yet) =====
     { name: "Mount Ainslie Lookout, Canberra", lat: -35.2730, lng: 149.1650, cat: "sightsee", budget: 0, hint: "The whole planned city lined up beneath you — best at dusk." },
     { name: "Queanbeyan River Walk", lat: -35.3540, lng: 149.2320, cat: "nature", budget: 0, hint: "A quiet riverside path through the heart of the old town." },
     { name: "National Arboretum, Canberra", lat: -35.2810, lng: 149.0680, cat: "nature", budget: 0, hint: "A hundred forests from around the world on a hill over the lake." },
@@ -817,7 +808,13 @@
     { id: "s3", region: "Sydney · Hills District", name: "Castle Hill Keep",       clue: "Beneath the towers of Castle Hill, find the keep's hidden prize.",     lat: -33.7318, lng: 151.0049, reward: "neon" },
     { id: "s4", region: "Sydney · Hills District", name: "Bella Vista Lookout",    clue: "Out by the old farm and the lake — a beautiful view guards this one.", lat: -33.7389, lng: 150.9456, reward: "ocean" },
     { id: "s5", region: "Sydney · Hills District", name: "Norwest Water Cache",    clue: "Around the Norwest lake, where business meets the water.",             lat: -33.7296, lng: 150.9692, reward: "gold" },
-    { id: "s6", region: "Sydney · Hills District", name: "Kellyville Quest",       clue: "Far out in Kellyville — the quest few finish.",                        lat: -33.7126, lng: 150.9570, reward: "mint" }
+    { id: "s6", region: "Sydney · Hills District", name: "Kellyville Quest",       clue: "Far out in Kellyville — the quest few finish.",                        lat: -33.7126, lng: 150.9570, reward: "mint" },
+    { id: "q1", region: "Canberra · ACT", name: "Queanbeyan River Token",   clue: "Follow the river path through the old town — the cache waits by the water.",   lat: -35.3540, lng: 149.2320, reward: "mint" },
+    { id: "q2", region: "Canberra · ACT", name: "Mount Ainslie Beacon",     clue: "Climb to where the whole city lines up below — the beacon hides at the top.",  lat: -35.2730, lng: 149.1650, reward: "royal" },
+    { id: "q3", region: "Canberra · ACT", name: "Lake Burley Griffin Cache",clue: "Along the foreshore near the jet of water — look low by the edge.",            lat: -35.2900, lng: 149.1300, reward: "ocean" },
+    { id: "q4", region: "Canberra · ACT", name: "Arboretum Forest Stash",   clue: "Among a hundred forests on the hill — the stash sits where the view opens.",   lat: -35.2810, lng: 149.0680, reward: "gold" },
+    { id: "q5", region: "Canberra · ACT", name: "Red Hill Roo Run",         clue: "Where the kangaroos graze at golden hour, the cache rests by the lookout.",    lat: -35.3430, lng: 149.1250, reward: "sunset" },
+    { id: "q6", region: "Canberra · ACT", name: "Black Mountain Secret",     clue: "Up by the tower on the mountain — the rarest find watches over the capital.", lat: -35.2745, lng: 149.0970, reward: "neon" }
   ];
   const getFoundCaches = () => LS.get("md_caches", []);
   function addFoundCache(id) { const c = getFoundCaches(); if (!c.includes(id)) { c.push(id); LS.set("md_caches", c); } }
