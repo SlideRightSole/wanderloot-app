@@ -589,6 +589,8 @@
       <button class="btn" id="go">Wander Out to a Mystery</button>
       <div id="setupErr" class="err"></div>
       <div class="note"><a id="openVenues" style="color:var(--muted);text-decoration:underline;cursor:pointer;">Own a venue? See how it works</a></div>
+      <!-- TEMP preview button — remove before launch -->
+      <div style="text-align:center;margin-top:22px;"><a id="previewIntro" style="color:var(--muted);text-decoration:underline;cursor:pointer;font-size:12px;opacity:.7;">👀 Preview intro (temp)</a></div>
     </div>
 
     <!-- DRIVE / RESULT -->
@@ -1115,7 +1117,9 @@
     document.getElementById("introTrack").scrollTo({ left: slides[i].offsetLeft, behavior: "smooth" });
     setIntroDot(i);
   }
-  function finishIntro() { LS.set("md_introseen", true); openOnboard(false); }
+  function finishIntro() { LS.set("md_introseen", true); if (getProfile()) { refreshChrome(); showOnly("setup"); } else openOnboard(false); }
+  // TEMP preview button — remove before launch
+  { const pv = document.getElementById("previewIntro"); if (pv) pv.addEventListener("click", openIntro); }
   document.getElementById("introNext").addEventListener("click", () => {
     if (introIdx >= introSlides().length - 1) finishIntro(); else goToSlide(introIdx + 1);
   });
