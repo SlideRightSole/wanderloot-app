@@ -395,7 +395,15 @@
     .route-pin { position: absolute; font-size: 30px; }
     .route-pin.me { left: 26px; bottom: 26px; } .route-pin.dest { right: 22px; top: 22px; }
     .route-tag { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); background: var(--text); color: #fff; font-size: 11.5px; font-weight: 800; padding: 6px 12px; border-radius: 999px; white-space: nowrap; }
-    /* loot card (slide 3) */
+    /* deal card (discounts slide) */
+    .deal-card { width: 250px; border-radius: 22px; overflow: hidden; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 18px 40px rgba(0,0,0,.14); }
+    .deal-banner { height: 118px; background: linear-gradient(135deg, var(--coral), var(--sun)); display: flex; align-items: center; justify-content: center; font-size: 52px; position: relative; }
+    .deal-badge { position: absolute; left: 14px; top: 14px; background: #fff; color: var(--text); font-weight: 800; font-size: 12.5px; padding: 7px 12px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+    .deal-body { padding: 14px 16px 18px; }
+    .deal-offer { font-weight: 800; font-size: 16px; margin-bottom: 10px; }
+    .deal-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .deal-chip { background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px; padding: 6px 11px; font-size: 12px; font-weight: 700; color: var(--text); }
+    /* loot card (unused fallback) */
     .loot-card { width: 230px; border-radius: 22px; background: linear-gradient(160deg, rgba(255,206,58,.22), rgba(255,99,179,.16)); border: 1px solid var(--sun); padding: 24px; text-align: center; }
     .loot-gift { font-size: 76px; filter: drop-shadow(0 10px 18px rgba(245,180,41,.4)); }
     .loot-chips { display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
@@ -430,21 +438,36 @@
       <div class="intro-track" id="introTrack">
 
         <section class="slide">
-          <h2>Tonight, let the&nbsp;city surprise&nbsp;you.</h2>
-          <div class="lead">A mystery outing, picked for you</div>
-          <div class="body">WanderLoot sends you on a surprise outing to a hidden local spot — revealed only when you arrive. You bring the curiosity; we bring the destination.</div>
+          <h2>Real discounts at restaurants &amp; attractions.</h2>
+          <div class="lead">A genuine deal, every outing</div>
+          <div class="body">Every WanderLoot outing unwraps a real offer from a local venue — a free entrée, two-for-one mains, a round on the house, or money off entry. You enjoy the saving; they fill a quiet night.</div>
           <div class="slide-visual">
-            <div class="myst-card">
-              <div class="myst-top">❓<div class="myst-bubble">Where are we going? 🤫</div></div>
-              <div class="myst-foot">Tonight's mystery<small>Hidden until you arrive</small></div>
+            <div class="deal-card">
+              <div class="deal-banner">🍽️<div class="deal-badge">Reward unlocked 🎉</div></div>
+              <div class="deal-body">
+                <div class="deal-offer">Free entrée with any two mains</div>
+                <div class="deal-chips"><span class="deal-chip">2-for-1 mains</span><span class="deal-chip">Drink on the house</span><span class="deal-chip">$ off entry</span></div>
+              </div>
             </div>
           </div>
         </section>
 
         <section class="slide">
-          <h2>Pick a vibe. We&nbsp;pick the&nbsp;place.</h2>
-          <div class="lead">Guided there, destination hidden</div>
-          <div class="body">Tell us walk or drive, how far, and your mood. We plot a mystery route and guide you turn-by-turn with voice — the map stays clipped so you never see where you're headed.</div>
+          <h2>The twist? You don't choose it.</h2>
+          <div class="lead">A surprise outing, picked for you</div>
+          <div class="body">Pick walk or drive, how far, and your mood — we send you somewhere surprising nearby and reveal the deal only when you arrive. The saving's the same; the night out is an adventure.</div>
+          <div class="slide-visual">
+            <div class="myst-card">
+              <div class="myst-top">🎁<div class="myst-bubble">Reward inside 🤫</div></div>
+              <div class="myst-foot">Tonight's mystery<small>Worth up to $40 — revealed on arrival</small></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="slide">
+          <h2>Guided there, hands-free.</h2>
+          <div class="lead">Turn-by-turn, destination hidden</div>
+          <div class="body">We plot a mystery route and guide you with voice — the map stays clipped so you never see where you're headed. Then the deal unwraps, and you collect points, borders and rare cache finds along the way.</div>
           <div class="slide-visual">
             <div class="route-card">
               <div class="route-line"></div>
@@ -456,24 +479,12 @@
         </section>
 
         <section class="slide">
-          <h2>Arrive to&nbsp;loot.</h2>
-          <div class="lead">Real rewards, points &amp; rare finds</div>
-          <div class="body">Every outing can unwrap a real reward from a local venue. Collect points, unlock profile borders, climb the tiers — and hunt hidden caches around town for the rarest loot of all.</div>
-          <div class="slide-visual">
-            <div class="loot-card">
-              <div class="loot-gift">🎁</div>
-              <div class="loot-chips"><span class="loot-chip">+100 pts</span><span class="loot-chip">👑 border</span><span class="loot-chip">🏅 tier up</span></div>
-            </div>
-          </div>
-        </section>
-
-        <section class="slide">
-          <h2>Free to play.<br>Real places.</h2>
-          <div class="lead">No cost, no catch</div>
+          <h2>Save on your<br>night out.</h2>
+          <div class="lead">Free to play, no catch</div>
           <div class="intro-stats">
-            <div class="istat"><b id="statGems">80+</b><span>hidden gems to discover</span></div>
-            <div class="istat"><b>3</b><span>regions &amp; growing — Gold Coast, Sydney, Canberra</span></div>
-            <div class="istat"><b>$0</b><span>always free to explore</span></div>
+            <div class="istat"><b>$40</b><span>up to, in real savings per outing</span></div>
+            <div class="istat"><b id="statGems">80+</b><span>places across Gold Coast, Sydney &amp; Canberra</span></div>
+            <div class="istat"><b>$0</b><span>to join — the app is always free</span></div>
           </div>
         </section>
 
