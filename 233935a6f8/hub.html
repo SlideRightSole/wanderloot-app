@@ -1,0 +1,73 @@
+<title>WanderLoot Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#eef3f3; --card:#ffffff; --ink:#0f2329; --muted:#5d7178;
+    --teal:#0fb894; --teal-deep:#0a7d67; --teal-ink:#063f34; --gold:#e0a01c; --line:#e0eae8;
+    --shadow:0 14px 34px rgba(10,60,52,.10);
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  body{ background:var(--paper); color:var(--ink); font-family:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; -webkit-font-smoothing:antialiased; padding:34px 18px 60px; }
+  .f{font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif}
+  .wrap{max-width:560px; margin:0 auto}
+  .head{ text-align:center; margin-bottom:24px; }
+  .wordmark{ font-family:"Bricolage Grotesque"; font-size:34px; font-weight:800; letter-spacing:-.02em; }
+  .wordmark span{ color:var(--teal) }
+  .head p{ font-size:15px; color:var(--muted); font-weight:600; margin-top:6px; }
+
+  .links{ display:flex; flex-direction:column; gap:12px; }
+  a.link{ display:flex; align-items:center; gap:15px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px; text-decoration:none; color:inherit; box-shadow:var(--shadow); transition:transform .12s, border-color .12s; }
+  a.link:hover{ transform:translateY(-2px); border-color:var(--teal); }
+  a.link:active{ transform:translateY(0); }
+  .ic{ flex:0 0 auto; width:50px; height:50px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:26px; }
+  .ic.app{ background:linear-gradient(135deg,#7b6cf6,#4db8ff); } .ic.join{ background:linear-gradient(135deg,var(--teal),#0bb3c9); }
+  .ic.price{ background:linear-gradient(135deg,var(--gold),#ff8b3d); } .ic.ops{ background:linear-gradient(135deg,#0a7d67,#0c9c7f); }
+  .ic.why{ background:linear-gradient(135deg,#ff6b5c,var(--gold)); }
+  .tx{ flex:1; min-width:0 }
+  .tx .t{ font-family:"Bricolage Grotesque"; font-weight:800; font-size:17px; }
+  .tx .d{ font-size:13px; color:var(--muted); font-weight:600; margin-top:1px; }
+  .arw{ flex:0 0 auto; color:var(--muted); font-size:20px; font-weight:800; }
+
+  .foot{ text-align:center; margin-top:24px; font-size:12px; color:var(--muted); }
+  .foot b{ color:var(--teal-deep) }
+</style>
+
+<div class="wrap">
+  <div class="head">
+    <div class="wordmark f">Wander<span>Loot</span></div>
+    <p>Everything in one place — tap to open.</p>
+  </div>
+
+  <div class="links">
+    <a class="link" href="index.html" target="_blank" rel="noopener">
+      <div class="ic app">🧭</div>
+      <div class="tx"><div class="t">The App</div><div class="d">The full WanderLoot experience — mystery outings, caches, rewards</div></div>
+      <div class="arw">›</div>
+    </a>
+    <a class="link" href="partner.html" target="_blank" rel="noopener">
+      <div class="ic join">🤝</div>
+      <div class="tx"><div class="t">Partner sign-up</div><div class="d">The page to send venues — info + sign-up form</div></div>
+      <div class="arw">›</div>
+    </a>
+    <a class="link" href="plans.html" target="_blank" rel="noopener">
+      <div class="ic price">💲</div>
+      <div class="tx"><div class="t">Pricing</div><div class="d">Free to start · $97 only when we deliver 5+</div></div>
+      <div class="arw">›</div>
+    </a>
+    <a class="link" href="dashboard.html" target="_blank" rel="noopener">
+      <div class="ic ops">📊</div>
+      <div class="tx"><div class="t">Ops dashboard</div><div class="d">Leads, redemptions & cost-per-customer</div></div>
+      <div class="arw">›</div>
+    </a>
+    <a class="link" href="nucleus.html" target="_blank" rel="noopener">
+      <div class="ic why">🎯</div>
+      <div class="tx"><div class="t">Nucleus</div><div class="d">Why → How → What — what we're building</div></div>
+      <div class="arw">›</div>
+    </a>
+  </div>
+
+  <div class="foot">Bookmark this page for quick access · <b>wanderloot.com.au</b></div>
+</div>

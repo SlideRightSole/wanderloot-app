@@ -92,19 +92,23 @@
     .navtile.quests { background: linear-gradient(135deg, #7b6cf6, #4db8ff); }
 
     /* Profile borders (unlocked by location caches) — applied to round avatar elements */
-    .bdr-gold   { box-shadow: 0 0 0 3px var(--sun) !important; }
-    .bdr-mint   { box-shadow: 0 0 0 3px var(--mint) !important; }
-    .bdr-ocean  { box-shadow: 0 0 0 3px #37e2b0, 0 0 0 6px rgba(55,226,176,.3) !important; }
-    .bdr-neon   { box-shadow: 0 0 0 3px #4db8ff, 0 0 12px rgba(77,184,255,.9) !important; }
-    .bdr-flames { box-shadow: 0 0 0 3px #ff6b5c, 0 0 14px rgba(255,107,92,.85) !important; }
-    .bdr-legend { box-shadow: 0 0 0 3px var(--sun), 0 0 18px rgba(255,206,58,.9) !important; animation: legendpulse 1.8s ease-in-out infinite; }
-    .bdr-royal  { box-shadow: 0 0 0 3px #7b6cf6, 0 0 12px rgba(123,108,246,.9) !important; }
-    .bdr-sunset { box-shadow: 0 0 0 3px #ff8b3d, 0 0 12px rgba(255,139,61,.9) !important; }
+    .bdr-gold,.bdr-mint,.bdr-ocean,.bdr-neon,.bdr-flames,.bdr-legend,.bdr-royal,.bdr-sunset { position: relative; overflow: visible !important; }
+    .bdr-gold::after,.bdr-mint::after,.bdr-ocean::after,.bdr-neon::after,.bdr-flames::after,.bdr-legend::after,.bdr-royal::after,.bdr-sunset::after {
+      position: absolute; top: -15px; left: 50%; transform: translateX(-50%); font-size: 19px; line-height: 1; pointer-events: none; z-index: 3; filter: drop-shadow(0 1px 1px rgba(0,0,0,.35));
+    }
+    .bdr-mint   { box-shadow: 0 0 0 3px var(--mint) !important; }                            .bdr-mint::after   { content: "🍀"; }
+    .bdr-gold   { box-shadow: 0 0 0 3px var(--sun) !important; }                             .bdr-gold::after   { content: "🏅"; }
+    .bdr-ocean  { box-shadow: 0 0 0 3px #37e2b0, 0 0 0 6px rgba(55,226,176,.3) !important; }  .bdr-ocean::after  { content: "🌊"; }
+    .bdr-neon   { box-shadow: 0 0 0 3px #4db8ff, 0 0 12px rgba(77,184,255,.9) !important; }   .bdr-neon::after   { content: "⚡"; }
+    .bdr-flames { box-shadow: 0 0 0 3px #ff6b5c, 0 0 14px rgba(255,107,92,.85) !important; }  .bdr-flames::after { content: "🔥"; }
+    .bdr-royal  { box-shadow: 0 0 0 3px #7b6cf6, 0 0 12px rgba(123,108,246,.9) !important; }  .bdr-royal::after  { content: "💎"; }
+    .bdr-sunset { box-shadow: 0 0 0 3px #ff8b3d, 0 0 12px rgba(255,139,61,.9) !important; }   .bdr-sunset::after { content: "🌅"; }
+    .bdr-legend { box-shadow: 0 0 0 3px var(--sun), 0 0 18px rgba(255,206,58,.9) !important; animation: legendpulse 1.8s ease-in-out infinite; } .bdr-legend::after { content: "👑"; font-size: 23px; top: -18px; }
     @keyframes legendpulse { 0%,100% { box-shadow: 0 0 0 3px var(--sun), 0 0 12px rgba(255,206,58,.7) !important; } 50% { box-shadow: 0 0 0 4px #fff0b3, 0 0 22px rgba(255,206,58,1) !important; } }
 
     /* Caches & borders screen */
     .q-h { font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin: 16px 0 8px; }
-    .q-strip { display: flex; gap: 14px; overflow-x: auto; padding: 4px 2px 10px; }
+    .q-strip { display: flex; gap: 14px; overflow-x: auto; padding: 22px 2px 10px; }
     .q-bdr { flex: 0 0 auto; text-align: center; width: 64px; }
     .q-bdr .ring { width: 50px; height: 50px; border-radius: 50%; background: var(--teal); margin: 3px auto 5px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 16px; cursor: pointer; }
     .q-bdr.locked { opacity: .4; } .q-bdr.locked .ring { cursor: default; }
@@ -702,24 +706,23 @@
     ocean:  { name: "Ocean Glow",     cls: "bdr-ocean",  rarity: "Rare" },
     neon:   { name: "Neon Pulse",     cls: "bdr-neon",   rarity: "Rare" },
     flames: { name: "Trail Flames",   cls: "bdr-flames", rarity: "Epic" },
-    legend: { name: "Legendary Aura", cls: "bdr-legend", rarity: "Legendary" },
-    royal:  { name: "Royal Violet",   cls: "bdr-royal",  rarity: "Rare" },
+    legend: { name: "Legendary Crown", cls: "bdr-legend", rarity: "Legendary" },
+    royal:  { name: "Royal Gem",       cls: "bdr-royal",  rarity: "Rare" },
     sunset: { name: "Sunset Glow",    cls: "bdr-sunset", rarity: "Rare" }
   };
   const CACHES = [
-    { id: "c1", name: "Surfers Beach Token",   clue: "Between the flags where the surfers gather — look to the sand.",        lat: -28.0025, lng: 153.4309, reward: "mint" },
-    { id: "c2", name: "Skyline Stash",         clue: "Up where the city meets the clouds, the cache waits on high.",          lat: -28.0057, lng: 153.4300, reward: "neon" },
-    { id: "c3", name: "Burleigh Headland Hunt",clue: "Walk the headland track; the ocean guards this one.",                   lat: -28.0920, lng: 153.4560, reward: "ocean" },
-    { id: "c4", name: "Rainforest Cache",      clue: "Follow the gully to the falls — it hides where the water sings.",       lat: -27.9765, lng: 153.1893, reward: "gold" },
-    { id: "c5", name: "Lighthouse Secret",     clue: "Where the point watches the sea, by the old light at the border.",      lat: -28.1650, lng: 153.5520, reward: "flames" },
-    { id: "c6", name: "Legend of the Hinterland", clue: "Deep in the green of the mountain — the rarest find of all.",        lat: -27.9900, lng: 153.1900, reward: "legend" },
-    // ===== Sydney — Hills District =====
-    { id: "s1", name: "Baulkham Hills Beacon",  clue: "Where the Hills shoppers roam — the cache hides near the heart of Baulkham Hills.", lat: -33.7606, lng: 150.9922, reward: "royal" },
-    { id: "s2", name: "Winston Hills Hideaway", clue: "By the mall on the hill, a secret sits in Winston Hills.",             lat: -33.7876, lng: 150.9772, reward: "sunset" },
-    { id: "s3", name: "Castle Hill Keep",       clue: "Beneath the towers of Castle Hill, find the keep's hidden prize.",     lat: -33.7318, lng: 151.0049, reward: "neon" },
-    { id: "s4", name: "Bella Vista Lookout",    clue: "Out by the old farm and the lake — a beautiful view guards this one.", lat: -33.7389, lng: 150.9456, reward: "ocean" },
-    { id: "s5", name: "Norwest Water Cache",    clue: "Around the Norwest lake, where business meets the water.",             lat: -33.7296, lng: 150.9692, reward: "gold" },
-    { id: "s6", name: "Kellyville Quest",       clue: "Far out in Kellyville — the quest few finish.",                        lat: -33.7126, lng: 150.9570, reward: "mint" }
+    { id: "c1", region: "Gold Coast", name: "Surfers Beach Token",   clue: "Between the flags where the surfers gather — look to the sand.",        lat: -28.0025, lng: 153.4309, reward: "mint" },
+    { id: "c2", region: "Gold Coast", name: "Skyline Stash",         clue: "Up where the city meets the clouds, the cache waits on high.",          lat: -28.0057, lng: 153.4300, reward: "neon" },
+    { id: "c3", region: "Gold Coast", name: "Burleigh Headland Hunt",clue: "Walk the headland track; the ocean guards this one.",                   lat: -28.0920, lng: 153.4560, reward: "ocean" },
+    { id: "c4", region: "Gold Coast", name: "Rainforest Cache",      clue: "Follow the gully to the falls — it hides where the water sings.",       lat: -27.9765, lng: 153.1893, reward: "gold" },
+    { id: "c5", region: "Gold Coast", name: "Lighthouse Secret",     clue: "Where the point watches the sea, by the old light at the border.",      lat: -28.1650, lng: 153.5520, reward: "flames" },
+    { id: "c6", region: "Gold Coast", name: "Legend of the Hinterland", clue: "Deep in the green of the mountain — the rarest find of all.",        lat: -27.9900, lng: 153.1900, reward: "legend" },
+    { id: "s1", region: "Sydney · Hills District", name: "Baulkham Hills Beacon",  clue: "Where the Hills shoppers roam — the cache hides near the heart of Baulkham Hills.", lat: -33.7606, lng: 150.9922, reward: "royal" },
+    { id: "s2", region: "Sydney · Hills District", name: "Winston Hills Hideaway", clue: "By the mall on the hill, a secret sits in Winston Hills.",             lat: -33.7876, lng: 150.9772, reward: "sunset" },
+    { id: "s3", region: "Sydney · Hills District", name: "Castle Hill Keep",       clue: "Beneath the towers of Castle Hill, find the keep's hidden prize.",     lat: -33.7318, lng: 151.0049, reward: "neon" },
+    { id: "s4", region: "Sydney · Hills District", name: "Bella Vista Lookout",    clue: "Out by the old farm and the lake — a beautiful view guards this one.", lat: -33.7389, lng: 150.9456, reward: "ocean" },
+    { id: "s5", region: "Sydney · Hills District", name: "Norwest Water Cache",    clue: "Around the Norwest lake, where business meets the water.",             lat: -33.7296, lng: 150.9692, reward: "gold" },
+    { id: "s6", region: "Sydney · Hills District", name: "Kellyville Quest",       clue: "Far out in Kellyville — the quest few finish.",                        lat: -33.7126, lng: 150.9570, reward: "mint" }
   ];
   const getFoundCaches = () => LS.get("md_caches", []);
   function addFoundCache(id) { const c = getFoundCaches(); if (!c.includes(id)) { c.push(id); LS.set("md_caches", c); } }
@@ -1379,13 +1382,17 @@
              '<div class="ring ' + (b.cls || "") + '"' + (has ? ' onclick="equipBorder(\'' + k + '\')"' : "") + '>' + (has ? (on ? "✓" : "") : "🔒") + '</div>' +
              '<div class="lab">' + b.name + '</div></div>';
     });
-    h += '</div><div class="q-h">Location caches</div>';
-    CACHES.forEach(c => {
-      const got = found.includes(c.id), b = BORDERS[c.reward];
-      h += '<div class="cache ' + (got ? "found" : "") + '"' + (got ? "" : ' onclick="openHunt(\'' + c.id + '\')"') + '>' +
-             '<h3>' + c.name + ' <span style="font-size:13px;font-weight:800;color:' + (got ? "var(--mint)" : "var(--violet)") + '">' + (got ? "Found ✓" : "🔍 Hunt") + '</span></h3>' +
-             '<div class="clue">"' + c.clue + '"</div>' +
-             '<div class="rew">Reward: ' + b.name + ' border · ' + b.rarity + '</div></div>';
+    h += '</div>';
+    [...new Set(CACHES.map(c => c.region))].forEach(rg => {
+      const list = CACHES.filter(c => c.region === rg), done = list.filter(c => found.includes(c.id)).length;
+      h += '<div class="q-h">📍 ' + rg + ' <span style="color:var(--muted);font-weight:700">· ' + done + '/' + list.length + '</span></div>';
+      list.forEach(c => {
+        const got = found.includes(c.id), b = BORDERS[c.reward];
+        h += '<div class="cache ' + (got ? "found" : "") + '"' + (got ? "" : ' onclick="openHunt(\'' + c.id + '\')"') + '>' +
+               '<h3>' + c.name + ' <span style="font-size:13px;font-weight:800;color:' + (got ? "var(--mint)" : "var(--violet)") + '">' + (got ? "Found ✓" : "🔍 Hunt") + '</span></h3>' +
+               '<div class="clue">"' + c.clue + '"</div>' +
+               '<div class="rew">Reward: ' + b.name + ' border · ' + b.rarity + '</div></div>';
+      });
     });
     document.getElementById("questsBody").innerHTML = h;
   }
