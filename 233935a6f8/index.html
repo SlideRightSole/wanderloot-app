@@ -323,6 +323,13 @@
     .cam-msg{ color:#fff; text-align:center; font-size:13.5px; font-weight:600; padding:12px 20px; background:rgba(0,0,0,.4); }
     .cam-shot{ width:72px; height:72px; margin:16px auto 26px; border-radius:50%; background:#fff; border:5px solid rgba(255,255,255,.45); cursor:pointer; flex:0 0 auto; transition:transform .1s; }
     .cam-shot:active{ transform:scale(.92); }
+    /* blurred loot map */
+    .nb-map-wrap{ position:relative; height:168px; border-radius:14px; overflow:hidden; border:1px solid var(--line); margin:10px 0 12px; }
+    #nbMap{ height:100%; width:100%; }
+    .nb-map-wrap.locked #nbMap{ filter:blur(7px) saturate(1.1); transform:scale(1.12); }
+    .nb-lock{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; background:rgba(8,18,24,.34); color:#fff; text-align:center; padding:12px; pointer-events:none; }
+    .nb-lock .nl-ico{ font-size:28px; } .nb-lock .nl-t{ font-weight:800; font-size:14.5px; } .nb-lock .nl-s{ font-size:12px; opacity:.92; }
+    .nb-pin{ font-size:20px; line-height:26px; text-align:center; filter:drop-shadow(0 2px 4px rgba(0,0,0,.45)); }
     .rw-lead{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:13px; }
     .rw-lead .row{ display:flex; justify-content:space-between; font-size:13.5px; padding:5px 0; border-bottom:1px solid var(--line); }
     .rw-lead .row:last-child{ border:none; } .rw-lead .row b{ font-weight:800; }
@@ -1718,7 +1725,11 @@
     const n = nearbyLoot(); if (!n.length) return "";
     const ult = ultimateActive();
     if (ult) addUnlocked(n); // Ultimate Pass auto-claims each area you reach
+    const locked = !(areaUnlocked || ult) && !n.every(p => lootActive(p.name));
     let h = '<div class="nearby" id="nearbyBox"><div class="nb-h">💰 More loot near here</div>';
+    h += '<div class="nb-map-wrap' + (locked ? ' locked' : '') + '" id="nbMapWrap"><div id="nbMap"></div>' +
+         (locked ? '<div class="nb-lock"><div class="nl-ico">🔒</div><div class="nl-t">' + n.length + ' reward' + (n.length > 1 ? 's' : '') + ' hidden near here</div><div class="nl-s">Unlock to reveal them on the map</div></div>' : '') +
+         '</div>';
     n.forEach(p => {
       const soc = '<div class="nb-soc">🧑 ' + looterCount(p.name) + ' Looters unwrapped this</div>';
       if (areaUnlocked || ult || lootActive(p.name)) h += '<div class="nb-item open"><div class="nb-name">' + p.name.split(",")[0] + '</div><div class="nb-sub">' + p.offer + '</div>' + soc + '</div>';
@@ -1729,13 +1740,42 @@
     h += '</div>';
     return h;
   }
+  let nbMap = null;
+  function initNearbyMap() {
+    const el = document.getElementById("nbMap"); if (!el || typeof L === "undefined" || !chosen) return;
+    const n = nearbyLoot(); if (!n.length) return;
+    const locked = !(areaUnlocked || ultimateActive()) && !n.every(p => lootActive(p.name));
+    try { if (nbMap) { nbMap.remove(); nbMap = null; } } catch (e) {}
+    nbMap = L.map("nbMap", { zoomControl: false, attributionControl: false, dragging: !locked, scrollWheelZoom: false, doubleClickZoom: !locked, keyboard: false, tap: !locked });
+    addTiles(nbMap); // same Mapbox tiles as the rest of the app (renders on the live site)
+    const here = [chosen.lat, chosen.lng], pts = [here];
+    L.circleMarker(here, { radius: 7, color: "#ffce3a", fillColor: "#ffce3a", fillOpacity: 1, weight: 2 }).addTo(nbMap);
+    n.forEach((p, i) => {
+      let ll = [p.lat, p.lng];
+      if (locked) { const j = 0.004; ll = [p.lat + Math.sin(i * 2.1) * j, p.lng + Math.cos(i * 1.7) * j]; } // jitter so exact spots stay hidden under the blur
+      const open = !locked;
+      const mk = L.marker(ll, { icon: L.divIcon({ className: "nb-pin", html: open ? "💰" : "🔒", iconSize: [26, 26] }) }).addTo(nbMap);
+      if (open) mk.bindPopup("<b>" + p.name.split(",")[0] + "</b><br>" + p.offer);
+      pts.push(ll);
+    });
+    let tries = 0;
+    const fit = () => {
+      const el2 = document.getElementById("nbMap");
+      if (!el2 || !nbMap) return;
+      if (el2.clientWidth === 0 && tries++ < 25) { setTimeout(fit, 200); return; } // wait for the screen to lay out
+      try { nbMap.invalidateSize(); nbMap.fitBounds(L.latLngBounds(pts).pad(0.5), { maxZoom: 14, animate: false }); } catch (e) {}
+    };
+    setTimeout(fit, 120);
+  }
   function unlockAreaNow() {
     areaUnlocked = true; addUnlocked(nearbyLoot()); burst();
     toast("Unlocked for " + LOOT_DAYS + " days — come back anytime! (" + getUnlocks() + " left)");
     const el = document.getElementById("nearbyBox"); if (el) el.outerHTML = renderNearbyLoot();
+    initNearbyMap();
     refreshChrome();
   }
   function wireNearbyLoot() {
+    initNearbyMap();
     const b = document.getElementById("unlockArea");
     if (!b) return;
     b.onclick = () => { const cr = getUnlocks(); if (cr > 0) { setUnlocks(cr - 1); unlockAreaNow(); } else openUnlockStore(); };
