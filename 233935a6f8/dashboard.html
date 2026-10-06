@@ -175,7 +175,7 @@
     {k:"attraction",label:"Attraction",color:"#0fb894"},
   ];
   const SOURCES = ["Direct","EatClub","Groupon","Referral","Walk-in"];
-  const BILL_AT = 5, FEE = 97;   // one price: $97 in any month we deliver 5+ customers; under 5 is free
+  const BILL_AT = 3, FEE = 97;   // one price: $97 in any month we deliver 3+ customers; under 3 is free
   // Suburb centroids so any lead can be placed on the customer map.
   const SUBURB_COORDS = {
     "Surfers Paradise":[-28.0027,153.4309],"Broadbeach":[-28.0300,153.4310],"Broadbeach Waters":[-28.0380,153.4200],
@@ -372,7 +372,7 @@
   let editId = null;
 
   function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2400); }
-  const billing = p => p.redemptions >= BILL_AT;   // redemptions = THIS month's delivered customers; 5+ triggers the $97
+  const billing = p => p.redemptions >= BILL_AT;   // redemptions = THIS month's delivered customers; 3+ triggers the $97
   const CPA_GOAL = 10;                              // target cost-per-customer; hit at 10+ delivered ($97/10 = $9.70)
   const cpa = p => (billing(p) && p.redemptions) ? FEE / p.redemptions : 0;   // what each customer cost this partner
 
