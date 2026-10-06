@@ -1536,7 +1536,18 @@
   function stopTracking() {
     if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
     if (demoTimer) { clearInterval(demoTimer); demoTimer = null; }
+    releaseAwake();
   }
+  // Keep the screen awake while live navigation / a hunt is running so the phone never sleeps mid-drive.
+  let wakeLock = null;
+  async function keepAwake() {
+    try { if ("wakeLock" in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request("screen"); wakeLock.addEventListener("release", () => { wakeLock = null; }); } } catch (e) {}
+  }
+  function releaseAwake() { try { if (wakeLock) { wakeLock.release(); wakeLock = null; } } catch (e) {} }
+  document.addEventListener("visibilitychange", () => {
+    // the OS drops the lock when the tab is hidden — re-acquire it when we're back and still tracking
+    if (document.visibilityState === "visible" && (watchId !== null || huntWatch !== null)) keepAwake();
+  });
 
   // ============ Turn-by-turn (prototype: OSRM routing + Web Speech voice) ============
   // Real voice directions while the destination stays hidden — the route on the map is clipped
@@ -1562,6 +1573,7 @@
   }
   function stepText(step) {
     const m = step.maneuver || {}, mod = m.modifier || "", road = step.name ? (" onto " + step.name) : "";
+    if (mod.indexOf("uturn") >= 0) return "Make a U-turn" + (step.name ? ", then continue on " + step.name : "");
     switch (m.type) {
       case "depart": return "Start off" + (step.name ? (" on " + step.name) : "");
       case "turn": case "end of road": return "Turn " + mod + road;
@@ -1949,6 +1961,7 @@
       () => { msg.textContent = "Could not read GPS. Check location permission."; },
       { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 }
     );
+    keepAwake(); // hold the screen on for the whole drive
   });
   document.getElementById("demoBtn").addEventListener("click", () => {
     stopTracking(); stopNav(); arrived = false; parked = false;
@@ -1991,7 +2004,7 @@
 
   // ============ Caches & borders ============
   let huntWatch = null;
-  function stopHunt() { if (huntWatch != null) { navigator.geolocation.clearWatch(huntWatch); huntWatch = null; } }
+  function stopHunt() { if (huntWatch != null) { navigator.geolocation.clearWatch(huntWatch); huntWatch = null; } releaseAwake(); }
   document.getElementById("openQuests").addEventListener("click", openQuests);
   document.getElementById("lootBanner").addEventListener("click", openLootBag);
   function openLootBag() {
@@ -2063,6 +2076,7 @@
         document.getElementById("hFound").disabled = !near;
         if (near) document.getElementById("hMsg").textContent = "You're here! 📸 Capture the cache to claim it.";
       }, () => { document.getElementById("hMsg").textContent = "GPS unavailable — use Simulate find to test."; }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 });
+      keepAwake(); // hold the screen on while hunting
     } else { document.getElementById("hMsg").textContent = "No GPS — use Simulate find to test."; }
   };
   // Live in-app camera: can't pick an old photo, and the capture is GPS-verified on the spot.
