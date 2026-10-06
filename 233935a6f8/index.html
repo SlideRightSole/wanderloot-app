@@ -179,6 +179,14 @@
     .mockrow { display: flex; gap: 8px; margin-top: 10px; }
     .mockrow .btn { padding: 12px; font-size: 14px; }
 
+    /* More loot near here (locked nearby partners) */
+    .nearby { background: var(--panel-2); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin: 14px 0 4px; text-align: left; }
+    .nb-h { font-weight: 800; font-size: 14px; margin-bottom: 8px; }
+    .nb-item { border-top: 1px solid var(--line); padding: 9px 0; } .nb-item:first-of-type { border-top: none; }
+    .nb-name { font-weight: 800; font-size: 14px; } .nb-name.blur { filter: blur(5px); user-select: none; }
+    .nb-sub { font-size: 12.5px; color: var(--muted); margin-top: 1px; } .nb-item.open .nb-sub { color: var(--sun); font-weight: 700; }
+    .nb-soc { font-size: 11.5px; color: var(--mint); font-weight: 700; margin-top: 3px; }
+
     /* Redeem-at-venue (scan the partner's WanderLoot code) */
     .redeemed-card { background: linear-gradient(180deg, rgba(55,226,176,0.18), rgba(55,226,176,0.05)); border: 1px solid var(--good); border-radius: 14px; padding: 14px; text-align: center; }
     .redeemed-card .rc-check { width: 44px; height: 44px; border-radius: 50%; background: var(--good); color: #05271a; font-size: 26px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; }
@@ -1146,7 +1154,7 @@
 
   // ============ Arrival ============
   function arrive() {
-    if (arrived) return; arrived = true; stopTracking();
+    if (arrived) return; arrived = true; stopTracking(); areaUnlocked = false;
     const wasNav = navOn; stopNav(); if (wasNav) speak("You have arrived.");
     const newArea = !getVisited().some(x => x.name === chosen.name);
     const beforeTier = tierIndex(getPoints());
@@ -1212,11 +1220,13 @@
     }
     html += '<a class="gmaps" href="' + gmaps + '" target="_blank" rel="noopener">Open in Google Maps</a>';
     html += '<div class="arrive-progress" id="arriveProgress"></div>';
+    html += renderNearbyLoot();
     html += '<div class="mockrow"><button class="btn alt" id="reviewBtn">Leave a review +50</button></div>';
     document.getElementById("arriveBox").innerHTML = html;
 
     if (chosen.offer) renderVoucherAction();
     document.getElementById("reviewBtn").addEventListener("click", reviewMock);
+    wireNearbyLoot();
     updateArriveProgress(newArea);
     checkTierUp(beforeTier);
 
@@ -1225,6 +1235,30 @@
     const box = document.getElementById("arriveBox");
     animateIn(box, "catch-pop"); refreshChrome();
     window.scrollTo(0, 0);
+  }
+  // "More loot near here" — locked nearby partners the user can unlock (paid in the real app)
+  let areaUnlocked = false;
+  function nearbyLoot() {
+    return PLACES.filter(p => p.name !== chosen.name && p.offer)
+      .map(p => ({ p, d: haversine([chosen.lat, chosen.lng], [p.lat, p.lng]) }))
+      .filter(x => x.d <= 6).sort((a, b) => a.d - b.d).slice(0, 3).map(x => x.p);
+  }
+  function looterCount(name) { let h = 0; for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0; return 40 + (h % 360); }
+  function renderNearbyLoot() {
+    const n = nearbyLoot(); if (!n.length) return "";
+    let h = '<div class="nearby" id="nearbyBox"><div class="nb-h">💰 More loot near here</div>';
+    n.forEach(p => {
+      const soc = '<div class="nb-soc">🧑 ' + looterCount(p.name) + ' Looters unwrapped this</div>';
+      if (areaUnlocked) h += '<div class="nb-item open"><div class="nb-name">' + p.name.split(",")[0] + '</div><div class="nb-sub">' + p.offer + '</div>' + soc + '</div>';
+      else h += '<div class="nb-item"><div class="nb-name blur">' + p.name.split(",")[0] + '</div><div class="nb-sub">🔒 Hidden ' + (catName[p.cat] || "spot") + ' reward</div>' + soc + '</div>';
+    });
+    if (!areaUnlocked) h += '<button class="btn alt" id="unlockArea" style="width:100%;margin-top:10px">Unlock nearby loot · $1</button>';
+    h += '</div>';
+    return h;
+  }
+  function wireNearbyLoot() {
+    const b = document.getElementById("unlockArea");
+    if (b) b.onclick = () => { areaUnlocked = true; burst(); toast("Nearby loot unlocked! 💰"); const el = document.getElementById("nearbyBox"); if (el) el.outerHTML = renderNearbyLoot(); };
   }
   function updateArriveProgress(newArea) {
     const el = document.getElementById("arriveProgress");
