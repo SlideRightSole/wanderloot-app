@@ -209,6 +209,10 @@
             <span class="chip">$10 off a table of two or more</span>
           </div>
         </div>
+        <div class="fld">
+          <label>Minimum spend / conditions <span style="color:var(--muted);font-weight:600">— recommended, protects your margin</span></label>
+          <input id="mincond" placeholder="e.g. with any 2 mains · min spend $40 · 1 per table">
+        </div>
         <div class="row2">
           <div class="fld"><label>Redeem-by</label><input id="redeemby" value="Same day, before close"></div>
           <div class="fld"><label>Approx. offer value ($)</label><input id="value" inputmode="numeric" placeholder="30"></div>
@@ -291,6 +295,7 @@
       'Suburb: '+val('suburb'),
       'Type: '+document.getElementById('sector').value,
       'Offer: '+val('offer'),
+      'Min spend / conditions: '+(val('mincond')||'—'),
       'Redeem-by: '+val('redeemby'),
       'Approx value: $'+(val('value')||'—'),
       'Already advertises: '+(val('already')||'—'),
