@@ -313,6 +313,16 @@
     .pbar{ height:6px; border-radius:999px; background:var(--panel-2); overflow:hidden; margin:5px 0; }
     .pbar i{ display:block; height:100%; background:var(--good); border-radius:999px; }
     .setdone{ background:linear-gradient(135deg, rgba(255,206,58,.22), rgba(255,99,179,.14)); border:1px solid var(--sun); border-radius:12px; padding:10px 13px; font-weight:800; font-size:13.5px; margin:10px 0; }
+    /* cache photo capture */
+    .cache-shot{ width:100%; height:150px; object-fit:cover; border-radius:12px; margin-bottom:10px; border:1px solid var(--line); }
+    .cam-ov{ position:fixed; inset:0; z-index:120; background:#000; display:flex; flex-direction:column; }
+    .cam-head{ display:flex; align-items:center; justify-content:space-between; padding:14px 16px; color:#fff; font-size:15px; font-weight:800; }
+    .cam-x{ background:rgba(255,255,255,.15); color:#fff; border:none; width:34px; height:34px; border-radius:999px; font-size:16px; cursor:pointer; }
+    .cam-stage{ flex:1; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+    #camVid{ width:100%; height:100%; object-fit:cover; }
+    .cam-msg{ color:#fff; text-align:center; font-size:13.5px; font-weight:600; padding:12px 20px; background:rgba(0,0,0,.4); }
+    .cam-shot{ width:72px; height:72px; margin:16px auto 26px; border-radius:50%; background:#fff; border:5px solid rgba(255,255,255,.45); cursor:pointer; flex:0 0 auto; transition:transform .1s; }
+    .cam-shot:active{ transform:scale(.92); }
     .rw-lead{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:13px; }
     .rw-lead .row{ display:flex; justify-content:space-between; font-size:13.5px; padding:5px 0; border-bottom:1px solid var(--line); }
     .rw-lead .row:last-child{ border:none; } .rw-lead .row b{ font-weight:800; }
@@ -1014,6 +1024,9 @@
   ];
   const getFoundCaches = () => LS.get("md_caches", []);
   function addFoundCache(id) { const c = getFoundCaches(); if (!c.includes(id)) { c.push(id); LS.set("md_caches", c); } }
+  // The cache IS a photo you capture on site — stored as proof-of-find (dataURL + where/when).
+  const getCachePhotos = () => LS.get("md_cachephotos", {});
+  function setCachePhoto(id, obj) { const m = getCachePhotos(); m[id] = obj; LS.set("md_cachephotos", m); }
   const getBorders = () => LS.get("md_borders", ["none"]);
   function addBorder(k) { const b = getBorders(); if (!b.includes(k)) { b.push(k); LS.set("md_borders", b); } }
   const getBorder = () => LS.get("md_border", "none");
@@ -1926,10 +1939,13 @@
     [...new Set(CACHES.map(c => c.region))].forEach(rg => {
       const list = CACHES.filter(c => c.region === rg), done = list.filter(c => found.includes(c.id)).length;
       h += '<div class="q-h">📍 ' + rg + ' <span style="color:var(--muted);font-weight:700">· ' + done + '/' + list.length + '</span></div>';
+      const photos = getCachePhotos();
       list.forEach(c => {
         const got = found.includes(c.id), b = BORDERS[c.reward];
+        const ph = got && photos[c.id] && photos[c.id].photo ? photos[c.id].photo : null;
         h += '<div class="cache ' + (got ? "found" : "") + '"' + (got ? "" : ' onclick="openHunt(\'' + c.id + '\')"') + '>' +
-               '<h3>' + c.name + ' <span style="font-size:13px;font-weight:800;color:' + (got ? "var(--mint)" : "var(--violet)") + '">' + (got ? "Found ✓" : "🔍 Hunt") + '</span></h3>' +
+               (ph ? '<img class="cache-shot" src="' + ph + '" alt="Your capture">' : '') +
+               '<h3>' + c.name + ' <span style="font-size:13px;font-weight:800;color:' + (got ? "var(--mint)" : "var(--violet)") + '">' + (got ? (ph ? "📸 Captured" : "Found ✓") : "🔍 Hunt") + '</span></h3>' +
                '<div class="clue">"' + c.clue + '"</div>' +
                '<div class="rew">Reward: ' + b.name + ' border · ' + b.rarity + '</div></div>';
       });
@@ -1947,32 +1963,70 @@
         '<div class="compass"><div class="sonar"><span></span><span></span></div><div class="arrow" id="hArrow">&#8593;</div><div class="compass-label" id="hDir">Finding…</div></div>' +
         '<div class="distance"><span id="hKm">–</span><small> km away</small></div>' +
         '<div id="hMsg" class="note" style="margin:8px 0"></div>' +
-        '<button class="btn" id="hFound" disabled>Found it!</button>' +
+        '<button class="btn" id="hFound" disabled>📸 Capture the cache</button>' +
         '<button class="btn alt" id="hSim" style="margin-top:8px">Simulate find (demo)</button>' +
         '<button class="btn ghost" id="hBack" style="margin-top:8px">Back to caches</button>' +
       '</div>';
-    document.getElementById("hSim").onclick = () => { stopHunt(); foundCache(id); };
-    document.getElementById("hFound").onclick = () => { stopHunt(); foundCache(id); };
+    document.getElementById("hSim").onclick = () => { stopHunt(); foundCache(id, false); };
+    document.getElementById("hFound").onclick = () => openCameraCapture(id, c);
     document.getElementById("hBack").onclick = () => { stopHunt(); openQuests(); };
     if (navigator.geolocation) {
-      document.getElementById("hMsg").textContent = "Walk toward the cache — 'Found it!' unlocks within 60m.";
+      document.getElementById("hMsg").textContent = "Walk to the cache — the camera unlocks within 60 m. Snap the spot to log your find.";
       huntWatch = navigator.geolocation.watchPosition(p => {
         const pos = [p.coords.latitude, p.coords.longitude], km = haversine(pos, [c.lat, c.lng]);
         document.getElementById("hKm").textContent = km >= 10 ? km.toFixed(0) : km.toFixed(1);
         const deg = bearingDeg(pos, [c.lat, c.lng]);
         document.getElementById("hArrow").style.transform = "rotate(" + deg + "deg)";
         document.getElementById("hDir").textContent = "Head " + bearingName(deg).toLowerCase();
-        if (km <= 0.1) { document.getElementById("hFound").disabled = false; document.getElementById("hMsg").textContent = "You're here! Tap Found it!"; }
+        const near = km <= 0.06;
+        document.getElementById("hFound").disabled = !near;
+        if (near) document.getElementById("hMsg").textContent = "You're here! 📸 Capture the cache to claim it.";
       }, () => { document.getElementById("hMsg").textContent = "GPS unavailable — use Simulate find to test."; }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 });
     } else { document.getElementById("hMsg").textContent = "No GPS — use Simulate find to test."; }
   };
-  function foundCache(id) {
+  // Live in-app camera: can't pick an old photo, and the capture is GPS-verified on the spot.
+  let _camStream = null;
+  function openCameraCapture(id, c) {
+    const ov = document.createElement("div"); ov.className = "cam-ov"; ov.id = "camOv";
+    ov.innerHTML =
+      '<div class="cam-head"><b>📸 ' + c.name + '</b><button id="camX" class="cam-x" aria-label="Close">✕</button></div>' +
+      '<div class="cam-stage"><video id="camVid" autoplay playsinline muted></video></div>' +
+      '<div id="camMsg" class="cam-msg">Point at the spot and snap it — we verify you’re here, then it’s yours.</div>' +
+      '<button id="camShot" class="cam-shot" aria-label="Capture"></button>';
+    document.body.appendChild(ov);
+    const close = () => { try { _camStream && _camStream.getTracks().forEach(t => t.stop()); } catch (e) {} _camStream = null; const o = document.getElementById("camOv"); if (o) o.remove(); };
+    document.getElementById("camX").onclick = close;
+    navigator.mediaDevices && navigator.mediaDevices.getUserMedia
+      ? navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false })
+          .then(stream => { _camStream = stream; const v = document.getElementById("camVid"); if (v) v.srcObject = stream; })
+          .catch(() => { const m = document.getElementById("camMsg"); if (m) m.textContent = "Couldn't open the camera — allow camera access, or use Simulate find to test."; })
+      : (document.getElementById("camMsg").textContent = "Camera not available on this device/browser.");
+    document.getElementById("camShot").onclick = () => {
+      const v = document.getElementById("camVid"), msg = document.getElementById("camMsg");
+      if (!v || !v.videoWidth) { msg.textContent = "Camera still starting…"; return; }
+      if (!navigator.geolocation) { msg.textContent = "Need GPS to verify the find."; return; }
+      msg.textContent = "Verifying you're at the cache…";
+      navigator.geolocation.getCurrentPosition(p => {
+        const pos = [p.coords.latitude, p.coords.longitude], d = haversine(pos, [c.lat, c.lng]) * 1000;
+        if (d > 80) { msg.textContent = "You're ~" + Math.round(d) + " m away — get within 80 m of the cache to log it."; return; }
+        const scale = Math.min(1, 720 / Math.max(v.videoWidth, v.videoHeight));
+        const cv = document.createElement("canvas");
+        cv.width = Math.round(v.videoWidth * scale); cv.height = Math.round(v.videoHeight * scale);
+        cv.getContext("2d").drawImage(v, 0, 0, cv.width, cv.height);
+        let photo = ""; try { photo = cv.toDataURL("image/jpeg", 0.6); } catch (e) {}
+        setCachePhoto(id, { photo: photo, at: Date.now(), lat: pos[0], lng: pos[1], acc: Math.round(p.coords.accuracy || 0) });
+        close();
+        foundCache(id, true);
+      }, () => { msg.textContent = "Couldn't read your location — enable GPS to verify the find."; }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 5000 });
+    };
+  }
+  function foundCache(id, verified) {
     const c = CACHES.find(x => x.id === id); if (!c) return;
     if (getFoundCaches().includes(id)) { openQuests(); return; }
     const before = tierIndex(getPoints());
     addFoundCache(id); addBorder(c.reward); addPoints(75);
     burst(); refreshChrome(); checkTierUp(before);
-    toast("Cache found! Unlocked the " + BORDERS[c.reward].name + " border 🎉");
+    toast((verified ? "📸 Cache captured & verified! " : "Cache found! ") + "Unlocked the " + BORDERS[c.reward].name + " border 🎉");
     openQuests();
   }
   window.equipBorder = function (k) {
