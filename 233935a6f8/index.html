@@ -582,6 +582,24 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
+  // ============ Map provider config ============
+  // Paste your Mapbox PUBLIC token (starts with "pk.") between the quotes to switch the
+  // map tiles AND turn-by-turn routing onto Mapbox. Leave it empty "" to use the free
+  // CARTO + OSRM demo services. If a Mapbox call ever fails, the app auto-falls back to the demo.
+  const MAPBOX_TOKEN = "pk.eyJ1Ijoid2FuZGVybG9vdG1hcCIsImEiOiJjbXV3b2NjdnUwMDRuMnhweXZocXJ3enZ1In0.jX5P1mTSYRSu6jZbdJtvsg";
+  const MAPBOX_STYLE = "mapbox/navigation-night-v1"; // dark nav-styled basemap; swap to mapbox/streets-v12 for a classic look
+  const CARTO_TILES = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+  function tileLayerConfig() {
+    if (MAPBOX_TOKEN) {
+      return {
+        url: "https://api.mapbox.com/styles/v1/" + MAPBOX_STYLE + "/tiles/512/{z}/{x}/{y}@2x?access_token=" + MAPBOX_TOKEN,
+        opts: { maxZoom: 19, tileSize: 512, zoomOffset: -1, crossOrigin: true }
+      };
+    }
+    return { url: CARTO_TILES, opts: { maxZoom: 19 } };
+  }
+  function addTiles(map) { const t = tileLayerConfig(); return L.tileLayer(t.url, t.opts).addTo(map); }
+
   // ============ Seed destinations ============
   const PLACES = [
     // Sydney partner venues (illustrative, carry vouchers)
@@ -1070,7 +1088,7 @@
   function drawUserMap(pos) {
     if (umap) umap.remove();
     umap = L.map("map", { zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false });
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(umap);
+    addTiles(umap);
     umap.setView(pos, 12);
     umarker = L.circleMarker(pos, { radius: 9, color: "#ffce3a", fillColor: "#ffce3a", fillOpacity: 1 }).addTo(umap);
     setTimeout(() => umap.invalidateSize(), 100);
@@ -1127,11 +1145,23 @@
   function metresText(m) { return m >= 1000 ? ((m / 1000).toFixed(1) + " km") : (Math.round(m / 10) * 10 + " m"); }
   function manLatLng(step) { const l = step.maneuver.location; return [l[1], l[0]]; }
 
+  async function fetchRoute(pos, dest) {
+    // Mapbox Directions first (if a token is set); OSRM public demo as automatic fallback.
+    const coords = pos[1] + "," + pos[0] + ";" + dest[1] + "," + dest[0];
+    if (MAPBOX_TOKEN) {
+      try {
+        const mb = "https://api.mapbox.com/directions/v5/mapbox/driving/" + coords + "?overview=full&geometries=geojson&steps=true&access_token=" + MAPBOX_TOKEN;
+        const j = await (await fetch(mb)).json();
+        if (j.routes && j.routes.length) return j;
+      } catch (e) { /* fall through to OSRM */ }
+    }
+    const osrm = "https://router.project-osrm.org/route/v1/driving/" + coords + "?overview=full&geometries=geojson&steps=true";
+    return await (await fetch(osrm)).json();
+  }
   async function startNav(pos) {
     const dest = [chosen.lat, chosen.lng];
-    const url = "https://router.project-osrm.org/route/v1/driving/" + pos[1] + "," + pos[0] + ";" + dest[1] + "," + dest[0] + "?overview=full&geometries=geojson&steps=true";
     try {
-      const j = await (await fetch(url)).json();
+      const j = await fetchRoute(pos, dest);
       if (!j.routes || !j.routes.length) { navOn = false; document.getElementById("driveMsg").textContent = "No road route found — using the compass instead."; return; }
       const route = j.routes[0];
       steps = route.legs[0].steps;
@@ -1600,7 +1630,7 @@
     document.getElementById("mapTotal").textContent = PLACES.length;
     if (emap) emap.remove();
     emap = L.map("emap", { zoomControl: false, attributionControl: false });
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(emap);
+    addTiles(emap);
     const visited = getVisited();
     if (visited.length) {
       const pts = [];
