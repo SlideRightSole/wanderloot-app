@@ -330,6 +330,17 @@
     .nb-lock{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; background:rgba(8,18,24,.34); color:#fff; text-align:center; padding:12px; pointer-events:none; }
     .nb-lock .nl-ico{ font-size:28px; } .nb-lock .nl-t{ font-weight:800; font-size:14.5px; } .nb-lock .nl-s{ font-size:12px; opacity:.92; }
     .nb-pin{ font-size:20px; line-height:26px; text-align:center; filter:drop-shadow(0 2px 4px rgba(0,0,0,.45)); }
+    /* gamified mystery meter */
+    .mystery-meter{ border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin:4px 0 14px; background:var(--panel-2); transition:background .4s; }
+    .mm-top{ display:flex; justify-content:space-between; align-items:center; font-weight:800; font-size:14px; margin-bottom:8px; }
+    #mmPct{ font-variant-numeric:tabular-nums; color:var(--muted); }
+    .mm-bar{ height:12px; border-radius:999px; background:rgba(0,0,0,.08); overflow:hidden; }
+    .mm-bar i{ display:block; height:100%; width:0%; border-radius:999px; background:linear-gradient(90deg,#4db8ff,#37e2b0); transition:width .6s cubic-bezier(.3,1,.4,1); }
+    .mystery-meter.warm .mm-bar i{ background:linear-gradient(90deg,#ffce3a,#ff8b3d); }
+    .mystery-meter.warm{ background:rgba(255,206,58,.12); border-color:var(--sun); }
+    .mystery-meter.hot .mm-bar i{ background:linear-gradient(90deg,#ff8b3d,#ff5c5c); }
+    .mystery-meter.hot{ background:rgba(255,99,92,.12); border-color:#ff7a59; animation:hotpulse 1.1s ease-in-out infinite; }
+    @keyframes hotpulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(255,99,92,.0); } 50%{ box-shadow:0 0 0 4px rgba(255,99,92,.18); } }
     /* dietary sign-up popup */
     .sc-sub{ font-size:13px; color:rgba(255,255,255,.85); text-align:center; margin:-2px 0 14px; padding:0 6px; }
     .diet-pop-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
@@ -642,6 +653,10 @@
           <div class="nav-txt"><div class="nav-inst" id="navInst">Getting directions…</div><div class="nav-dist" id="navDist"></div></div>
           <button class="nav-mute" id="navMute" title="Mute voice">🔊</button>
         </div>
+        <div class="mystery-meter cool" id="mysMeter">
+          <div class="mm-top"><span id="mmLabel">🧭 On the trail</span><span id="mmPct">0%</span></div>
+          <div class="mm-bar"><i id="mmFill" style="width:0%"></i></div>
+        </div>
         <div class="distance"><span id="km">0</span><small> km to go</small></div>
         <div class="metarow">
           <div class="meta"><div class="v" id="eta">0 min</div><div class="k" id="etaLabel">est. drive</div></div>
@@ -660,6 +675,7 @@
         <button class="btn ghost" id="rerollBtn">🎲 Spin again</button>
         <button class="btn ghost" id="again">Pick a different mystery</button>
         <div id="driveMsg" class="note"></div>
+        <div style="text-align:center;margin-top:10px"><a id="revealMap" style="color:var(--muted);text-decoration:underline;cursor:pointer;font-size:12.5px;">😵 Lost or need to stop? Reveal &amp; open in Maps</a></div>
       </div>
 
       <div id="arriveCard" class="card hidden">
@@ -971,7 +987,7 @@
     drive: [ {v:20,t:"30 min",s:"~20 km"}, {v:55,t:"1 hour",s:"~55 km",sel:1}, {v:120,t:"2 hours",s:"~120 km"}, {v:250,t:"Half day",s:"~250 km"}, {v:600,t:"No limit",s:"Go far"} ],
     walk:  [ {v:0.5,t:"5 min",s:"~500 m"}, {v:1,t:"10 min",s:"~1 km",sel:1}, {v:1.6,t:"20 min",s:"~1.5 km"}, {v:2.5,t:"30 min",s:"~2.5 km"}, {v:5,t:"1 hour",s:"~5 km"} ]
   };
-  let chosen, umap, umarker, emap, watchId = null, demoTimer = null, arrived = false, premiumActive = false, parked = false, lastPool = [];
+  let chosen, umap, umarker, emap, watchId = null, demoTimer = null, arrived = false, premiumActive = false, parked = false, lastPool = [], driveBaseline = 0, warmHits = {};
   // ===== Parking leg helpers (drivers park near, then walk the reveal) =====
   function parkInfo() { return (chosen && state.mode !== "walk" && chosen.park && chosen.park.lat != null) ? chosen.park : null; }
   function parkPt() { const p = parkInfo(); return p ? [p.lat, p.lng] : null; }
@@ -1476,7 +1492,8 @@
       rc.innerHTML = '<div class="rc-ico">🌄</div><div>A hidden gem<div class="rc-sub">The destination itself is the reward</div></div>';
     }
     document.getElementById("driveMsg").textContent = "";
-    updateDistance(state.start); setArrow(state.start); setPulse(state.start);
+    driveBaseline = haversine(state.start, [chosen.lat, chosen.lng]); warmHits = {};
+    updateDistance(state.start); setArrow(state.start); setPulse(state.start); updateMysteryMeter(state.start);
     drawUserMap(state.start);
   }
   function updateDistance(pos) {
@@ -1501,12 +1518,48 @@
     if (umap) umap.remove();
     umap = L.map("map", { zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false });
     addTiles(umap);
-    umap.setView(pos, 12);
+    umap.setView(pos, 14);
     umarker = L.circleMarker(pos, { radius: 9, color: "#ffce3a", fillColor: "#ffce3a", fillOpacity: 1 }).addTo(umap);
     setTimeout(() => umap.invalidateSize(), 100);
   }
+  // ===== Gamified "warmer / colder" mystery meter =====
+  function updateMysteryMeter(pos) {
+    if (parked || !driveBaseline) return; // the meter is for the drive-to-mystery leg
+    const remain = haversine(pos, [chosen.lat, chosen.lng]);
+    const pct = Math.max(0, Math.min(100, Math.round((1 - remain / driveBaseline) * 100)));
+    const fill = document.getElementById("mmFill"); if (fill) fill.style.width = pct + "%";
+    const pe = document.getElementById("mmPct"); if (pe) pe.textContent = pct + "%";
+    let label = "🧭 On the trail", heat = "cool";
+    if (pct >= 95) { label = "🎯 Reward in sight!"; heat = "hot"; }
+    else if (pct >= 80) { label = "🔥🔥 Red hot"; heat = "hot"; }
+    else if (pct >= 50) { label = "🔥 Getting warm"; heat = "warm"; }
+    else if (pct >= 20) { label = "🙂 Closing in"; heat = "cool"; }
+    const lab = document.getElementById("mmLabel"); if (lab) lab.textContent = label;
+    const mm = document.getElementById("mysMeter"); if (mm) mm.className = "mystery-meter " + heat;
+    // milestone celebrations — buzz, chime, toast, and a progressive clue
+    const miles = [[50, "🔥 Warm! You're halfway to the mystery.", true], [80, "🔥🔥 Red hot — the reward's close!", false], [95, "🎯 You're basically there!", false]];
+    miles.forEach(([thr, msg, revealHint]) => {
+      if (pct >= thr && !warmHits[thr]) {
+        warmHits[thr] = 1;
+        try { navigator.vibrate && navigator.vibrate(45); } catch (e) {}
+        try { playChime(false); } catch (e) {}
+        toast(msg);
+        if (revealHint) {
+          const h = document.getElementById("hint");
+          if (h) h.innerHTML = "<b>Clue:</b> " + chosen.hint + '<div style="margin-top:6px;color:var(--sun);font-weight:800">🔥 Warmer: a ' + (catEmoji[chosen.cat] || "") + " " + (catName[chosen.cat] || "surprise") + " spot" + (chosen.offer ? " · reward ~$" + chosen.value : "") + "</div>";
+        }
+      }
+    });
+  }
+  function revealAndMap() {
+    if (!chosen) return;
+    if (!confirm("Reveal your mystery destination and open it in Google Maps? This gives away the surprise for this trip — your reward still unlocks when you arrive.")) return;
+    const url = "https://www.google.com/maps/dir/?api=1&travelmode=" + (state.mode === "walk" ? "walking" : "driving") + "&destination=" + chosen.lat + "," + chosen.lng;
+    window.open(url, "_blank", "noopener");
+    toast("Destination revealed — the reward still unlocks when you arrive.");
+  }
   function updateProgress(pos) {
-    updateDistance(pos); setArrow(pos); setPulse(pos);
+    updateDistance(pos); setArrow(pos); setPulse(pos); updateMysteryMeter(pos);
     if (umap && umarker) { umarker.setLatLng(pos); umap.panTo(pos, { animate: true }); }
     // Turn-by-turn voice only while driving (not during the final walk from the car)
     if (navMode && !parked) { if (pendingNav) { pendingNav = false; startNav(pos); } else updateNav(pos); }
@@ -1985,6 +2038,7 @@
   // ============ Navigation ============
   function backHome() { stopTracking(); stopNav(); stopHunt(); refreshChrome(); showOnly("setup"); }
   document.getElementById("rerollBtn").addEventListener("click", doReroll);
+  document.getElementById("revealMap").addEventListener("click", revealAndMap);
   document.getElementById("again").addEventListener("click", backHome);
   document.getElementById("again2").addEventListener("click", backHome);
   document.getElementById("mapBack").addEventListener("click", backHome);
