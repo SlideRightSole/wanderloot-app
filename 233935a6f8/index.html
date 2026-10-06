@@ -272,12 +272,12 @@
     .sc-hint{ margin-top:12px; font-size:12px; color:rgba(255,255,255,.6); font-weight:600; text-align:center }
 
     /* Turn-by-turn banner */
-    .nav-banner{ display:flex; align-items:center; gap:12px; background:linear-gradient(135deg,#0a7d67,#0c9c7f); color:#fff; border-radius:16px; padding:13px 13px; margin:2px 0 14px; box-shadow:0 10px 24px rgba(10,125,103,.3); text-align:left }
-    .nav-man{ flex:0 0 46px; width:46px; height:46px; border-radius:12px; background:rgba(255,255,255,.16); display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:800 }
+    .nav-banner{ display:flex; align-items:center; gap:15px; background:linear-gradient(135deg,#0a7d67,#0c9c7f); color:#fff; border-radius:20px; padding:18px 16px; margin:2px 0 14px; box-shadow:0 14px 32px rgba(10,125,103,.38); text-align:left; position:sticky; top:8px; z-index:40 }
+    .nav-man{ flex:0 0 66px; width:66px; height:66px; border-radius:18px; background:rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center; font-size:42px; font-weight:800; line-height:1 }
     .nav-txt{ flex:1; min-width:0 }
-    .nav-inst{ font-family:"Plus Jakarta Sans"; font-weight:800; font-size:17px; line-height:1.2 }
-    .nav-dist{ font-size:13px; color:#bff0e2; font-weight:700; margin-top:2px }
-    .nav-mute{ flex:0 0 auto; background:rgba(255,255,255,.16); border:none; color:#fff; width:40px; height:40px; border-radius:10px; font-size:18px; cursor:pointer }
+    .nav-dist{ font-family:"Plus Jakarta Sans"; font-weight:800; font-size:25px; line-height:1.05; color:#fff; letter-spacing:-.5px }
+    .nav-inst{ font-weight:700; font-size:17px; line-height:1.25; color:#ddf6ee; margin-top:4px; text-wrap:balance }
+    .nav-mute{ flex:0 0 auto; background:rgba(255,255,255,.18); border:none; color:#fff; width:46px; height:46px; border-radius:13px; font-size:20px; cursor:pointer; align-self:flex-start }
 
     /* Rewards screen */
     .rw-bal{ background:linear-gradient(135deg,var(--sun),#ff8b3d); color:#3a2400; border-radius:16px; padding:16px; text-align:center; margin-bottom:14px; }
@@ -650,7 +650,7 @@
         <div class="kicker" id="driveKicker">Mystery drive underway</div>
         <div id="navBanner" class="nav-banner hidden">
           <div class="nav-man" id="navMan">↑</div>
-          <div class="nav-txt"><div class="nav-inst" id="navInst">Getting directions…</div><div class="nav-dist" id="navDist"></div></div>
+          <div class="nav-txt"><div class="nav-dist" id="navDist">Getting directions…</div><div class="nav-inst" id="navInst"></div></div>
           <button class="nav-mute" id="navMute" title="Mute voice">🔊</button>
         </div>
         <div class="mystery-meter cool" id="mysMeter">
@@ -1690,7 +1690,7 @@
   function updateNavBanner(step, distM) {
     document.getElementById("navMan").textContent = manIcon(step);
     document.getElementById("navInst").textContent = stepText(step);
-    document.getElementById("navDist").textContent = "in " + metresText(distM);
+    document.getElementById("navDist").textContent = metresText(distM);
   }
   function updateNav(pos) {
     if (!navOn || !steps.length) return;
