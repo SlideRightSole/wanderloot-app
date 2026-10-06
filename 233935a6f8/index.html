@@ -371,6 +371,44 @@
 
     #toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px); background: #120b38; border: 1px solid var(--line); color: #fff; padding: 13px 20px; border-radius: 999px; font-weight: 800; box-shadow: 0 10px 30px rgba(0,0,0,0.4); opacity: 0; pointer-events: none; transition: all .3s cubic-bezier(.22,1.4,.4,1); z-index: 90; font-family: "Plus Jakarta Sans"; }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ===== First-run intro carousel ===== */
+    #intro { display: flex; flex-direction: column; min-height: calc(100vh - 86px); }
+    .intro-head { display: flex; justify-content: flex-end; align-items: center; margin: -4px 0 6px; }
+    .intro-skip { background: none; border: none; color: var(--muted); font-weight: 800; font-size: 14px; cursor: pointer; text-decoration: underline; font-family: inherit; padding: 6px; }
+    .intro-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; gap: 0; scrollbar-width: none; flex: 1; }
+    .intro-track::-webkit-scrollbar { display: none; }
+    .slide { flex: 0 0 100%; scroll-snap-align: center; padding: 6px 2px 4px; display: flex; flex-direction: column; }
+    .slide h2 { font-size: 30px; line-height: 1.12; letter-spacing: -0.5px; margin: 6px 0 10px; text-wrap: balance; }
+    .slide .lead { color: var(--accent); font-weight: 800; font-size: 16px; margin-bottom: 10px; }
+    .slide .body { color: var(--muted); font-size: 15.5px; line-height: 1.5; }
+    .slide-visual { margin-top: auto; padding-top: 18px; display: flex; align-items: center; justify-content: center; min-height: 230px; }
+    /* mystery card (slide 1) */
+    .myst-card { width: 230px; border-radius: 22px; overflow: hidden; background: var(--grad); color: #fff; box-shadow: 0 20px 44px rgba(15,184,148,0.33); position: relative; }
+    .myst-top { height: 150px; display: flex; align-items: center; justify-content: center; font-size: 72px; position: relative; background: radial-gradient(120px 120px at 50% 40%, rgba(255,255,255,.18), transparent); }
+    .myst-bubble { position: absolute; top: 14px; left: 14px; background: #fff; color: var(--text); font-weight: 800; font-size: 13px; padding: 8px 12px; border-radius: 14px 14px 14px 4px; box-shadow: 0 6px 16px rgba(0,0,0,.18); }
+    .myst-foot { padding: 12px 16px 16px; font-weight: 800; }
+    .myst-foot small { display: block; font-weight: 700; opacity: .85; font-size: 12px; margin-top: 2px; }
+    /* route card (slide 2) */
+    .route-card { width: 250px; height: 220px; border-radius: 22px; background: var(--panel-2); border: 1px solid var(--line); position: relative; overflow: hidden; }
+    .route-line { position: absolute; left: 40px; right: 40px; top: 40px; bottom: 40px; border: 3px dashed var(--accent); border-radius: 60px 20px 60px 20px; opacity: .55; }
+    .route-pin { position: absolute; font-size: 30px; }
+    .route-pin.me { left: 26px; bottom: 26px; } .route-pin.dest { right: 22px; top: 22px; }
+    .route-tag { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); background: var(--text); color: #fff; font-size: 11.5px; font-weight: 800; padding: 6px 12px; border-radius: 999px; white-space: nowrap; }
+    /* loot card (slide 3) */
+    .loot-card { width: 230px; border-radius: 22px; background: linear-gradient(160deg, rgba(255,206,58,.22), rgba(255,99,179,.16)); border: 1px solid var(--sun); padding: 24px; text-align: center; }
+    .loot-gift { font-size: 76px; filter: drop-shadow(0 10px 18px rgba(245,180,41,.4)); }
+    .loot-chips { display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+    .loot-chip { background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 7px 13px; font-weight: 800; font-size: 13px; }
+    /* stats (slide 4) */
+    .intro-stats { display: flex; flex-direction: column; gap: 0; margin-top: 8px; }
+    .istat { display: flex; align-items: baseline; gap: 14px; padding: 18px 2px; border-bottom: 1px solid var(--line); }
+    .istat:first-child { border-top: 1px solid var(--line); }
+    .istat b { font-size: 38px; letter-spacing: -1px; min-width: 120px; }
+    .istat span { color: var(--muted); font-weight: 700; font-size: 15px; }
+    .intro-dots { display: flex; gap: 8px; justify-content: center; margin: 16px 0 14px; }
+    .intro-dots i { width: 8px; height: 8px; border-radius: 999px; background: var(--line); transition: all .25s; }
+    .intro-dots i.on { width: 26px; background: var(--accent); }
   </style>
 </head>
 <body>
@@ -386,6 +424,64 @@
     </div>
 
     <!-- ONBOARD / AVATAR CREATOR -->
+    <!-- FIRST-RUN INTRO CAROUSEL -->
+    <div id="intro" class="hidden">
+      <div class="intro-head"><button class="intro-skip" id="introSkip">Skip</button></div>
+      <div class="intro-track" id="introTrack">
+
+        <section class="slide">
+          <h2>Tonight, let the&nbsp;city surprise&nbsp;you.</h2>
+          <div class="lead">A mystery outing, picked for you</div>
+          <div class="body">WanderLoot sends you on a surprise outing to a hidden local spot — revealed only when you arrive. You bring the curiosity; we bring the destination.</div>
+          <div class="slide-visual">
+            <div class="myst-card">
+              <div class="myst-top">❓<div class="myst-bubble">Where are we going? 🤫</div></div>
+              <div class="myst-foot">Tonight's mystery<small>Hidden until you arrive</small></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="slide">
+          <h2>Pick a vibe. We&nbsp;pick the&nbsp;place.</h2>
+          <div class="lead">Guided there, destination hidden</div>
+          <div class="body">Tell us walk or drive, how far, and your mood. We plot a mystery route and guide you turn-by-turn with voice — the map stays clipped so you never see where you're headed.</div>
+          <div class="slide-visual">
+            <div class="route-card">
+              <div class="route-line"></div>
+              <div class="route-pin me">📍</div>
+              <div class="route-pin dest">❓</div>
+              <div class="route-tag">Destination hidden until arrival</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="slide">
+          <h2>Arrive to&nbsp;loot.</h2>
+          <div class="lead">Real rewards, points &amp; rare finds</div>
+          <div class="body">Every outing can unwrap a real reward from a local venue. Collect points, unlock profile borders, climb the tiers — and hunt hidden caches around town for the rarest loot of all.</div>
+          <div class="slide-visual">
+            <div class="loot-card">
+              <div class="loot-gift">🎁</div>
+              <div class="loot-chips"><span class="loot-chip">+100 pts</span><span class="loot-chip">👑 border</span><span class="loot-chip">🏅 tier up</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="slide">
+          <h2>Free to play.<br>Real places.</h2>
+          <div class="lead">No cost, no catch</div>
+          <div class="intro-stats">
+            <div class="istat"><b id="statGems">80+</b><span>hidden gems to discover</span></div>
+            <div class="istat"><b>3</b><span>regions &amp; growing — Gold Coast, Sydney, Canberra</span></div>
+            <div class="istat"><b>$0</b><span>always free to explore</span></div>
+          </div>
+        </section>
+
+      </div>
+      <div class="intro-dots" id="introDots"><i class="on"></i><i></i><i></i><i></i></div>
+      <button class="btn" id="introNext">Next</button>
+    </div>
+
     <div id="onboard" class="hidden">
       <div class="card fade">
         <h2 class="title f">Create your profile</h2>
@@ -913,11 +1009,11 @@
     setTimeout(() => { host.innerHTML = ""; }, 1200);
   }
 
-  const SECTIONS = ["onboard", "setup", "result", "mapView", "passportView", "rewardsView", "questsView", "venues"];
+  const SECTIONS = ["intro", "onboard", "setup", "result", "mapView", "passportView", "rewardsView", "questsView", "venues"];
   function showOnly(id) {
     SECTIONS.forEach(s => document.getElementById(s).classList.add("hidden"));
     document.getElementById(id).classList.remove("hidden");
-    const tb = document.getElementById("topBack"); if (tb) tb.classList.toggle("hidden", id === "setup" || id === "onboard");
+    const tb = document.getElementById("topBack"); if (tb) tb.classList.toggle("hidden", id === "setup" || id === "onboard" || id === "intro");
     window.scrollTo(0, 0);
   }
 
@@ -983,6 +1079,50 @@
       document.getElementById("photoHint").textContent = "Tap to change photo";
     });
   });
+
+  // ============ First-run intro carousel ============
+  let introIdx = 0;
+  function introSlides() { return document.querySelectorAll("#introTrack .slide"); }
+  function openIntro() {
+    introIdx = 0;
+    const gems = PLACES.filter(p => !p.offer && (p.budget === 0 || p.budget === 1)).length;
+    const sg = document.getElementById("statGems"); if (sg) sg.textContent = (Math.floor(gems / 10) * 10) + "+";
+    showOnly("intro");
+    const tr = document.getElementById("introTrack"); if (tr) tr.scrollLeft = 0;
+    setIntroDot(0);
+  }
+  function setIntroDot(i) {
+    const dots = document.querySelectorAll("#introDots i");
+    dots.forEach((d, k) => d.classList.toggle("on", k === i));
+    const last = i >= introSlides().length - 1;
+    document.getElementById("introNext").textContent = last ? "Get started →" : "Next";
+  }
+  function goToSlide(i) {
+    const slides = introSlides(); if (!slides.length) return;
+    i = Math.max(0, Math.min(slides.length - 1, i));
+    introIdx = i;
+    document.getElementById("introTrack").scrollTo({ left: slides[i].offsetLeft, behavior: "smooth" });
+    setIntroDot(i);
+  }
+  function finishIntro() { LS.set("md_introseen", true); openOnboard(false); }
+  document.getElementById("introNext").addEventListener("click", () => {
+    if (introIdx >= introSlides().length - 1) finishIntro(); else goToSlide(introIdx + 1);
+  });
+  document.getElementById("introSkip").addEventListener("click", finishIntro);
+  // keep dots in sync when the user swipes
+  (function () {
+    const tr = document.getElementById("introTrack"); if (!tr) return;
+    let raf = null;
+    tr.addEventListener("scroll", () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = null;
+        const w = tr.clientWidth || 1;
+        const i = Math.round(tr.scrollLeft / w);
+        if (i !== introIdx) { introIdx = i; setIntroDot(i); }
+      });
+    }, { passive: true });
+  })();
 
   function openOnboard() {
     const p = getProfile();
@@ -1854,7 +1994,9 @@
 
   // ============ Boot ============
   refreshChrome();
-  if (getProfile()) { showOnly("setup"); applyTestTarget(); } else openOnboard(false);
+  if (getProfile()) { showOnly("setup"); applyTestTarget(); }
+  else if (!LS.get("md_introseen", false)) { openIntro(); }
+  else { openOnboard(false); }
   </script>
 </body>
 </html>
