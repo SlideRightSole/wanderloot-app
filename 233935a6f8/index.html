@@ -43,7 +43,9 @@
 
     /* Top bar */
     .topbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 2px 6px; }
-    .logo { font-family: "Plus Jakarta Sans"; font-size: 26px; font-weight: 700; letter-spacing: 0.3px; }
+    .logo { font-family: "Plus Jakarta Sans"; font-size: 26px; font-weight: 700; letter-spacing: 0.3px; cursor: pointer; }
+    .topback { border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-weight: 800; font-size: 14px; border-radius: 999px; padding: 7px 14px 7px 11px; cursor: pointer; }
+    .topback:active { transform: scale(0.96); }
     .logo span { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .avatar-chip { display: flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px 5px 5px; cursor: pointer; transition: transform .15s; }
     .avatar-chip:active { transform: scale(0.95); }
@@ -374,7 +376,8 @@
   <div id="burst"></div>
   <div class="wrap">
     <div class="topbar">
-      <div class="logo">Wander<span>Loot</span></div>
+      <button class="topback hidden" id="topBack" aria-label="Back">‹ Back</button>
+      <div class="logo" id="homeLogo" title="Home">Wander<span>Loot</span></div>
       <div class="avatar-chip hidden" id="avatarChip">
         <div class="av-face" id="chipFace">🦊</div>
         <div class="av-meta"><div class="av-name" id="chipName">Explorer</div><div class="av-tier" id="chipTier">Rookie</div></div>
@@ -798,6 +801,7 @@
   function showOnly(id) {
     SECTIONS.forEach(s => document.getElementById(s).classList.add("hidden"));
     document.getElementById(id).classList.remove("hidden");
+    const tb = document.getElementById("topBack"); if (tb) tb.classList.toggle("hidden", id === "setup" || id === "onboard");
     window.scrollTo(0, 0);
   }
 
@@ -1447,6 +1451,8 @@
   document.getElementById("mapBack").addEventListener("click", backHome);
   document.getElementById("passBack").addEventListener("click", backHome);
   document.getElementById("closeVenues").addEventListener("click", backHome);
+  document.getElementById("topBack").addEventListener("click", backHome);
+  document.getElementById("homeLogo").addEventListener("click", () => { if (getProfile()) backHome(); });
 
   document.getElementById("openVenues").addEventListener("click", () => {
     document.getElementById("vpCount").textContent = getRedeemed().length;
